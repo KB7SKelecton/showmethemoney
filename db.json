@@ -9,14 +9,38 @@
     }
   ],
   "categories": [
-    { "id": 1, "name": "행정" },
-    { "id": 2, "name": "교육" },
-    { "id": 3, "name": "교통" },
-    { "id": 4, "name": "쇼핑" },
-    { "id": 5, "name": "여행" },
-    { "id": 6, "name": "음식" },
-    { "id": 7, "name": "편의" },
-    { "id": 8, "name": "비즈니스" }
+    {
+      "id": 1,
+      "name": "행정"
+    },
+    {
+      "id": 2,
+      "name": "교육"
+    },
+    {
+      "id": 3,
+      "name": "교통"
+    },
+    {
+      "id": 4,
+      "name": "쇼핑"
+    },
+    {
+      "id": 5,
+      "name": "여행"
+    },
+    {
+      "id": 6,
+      "name": "음식"
+    },
+    {
+      "id": 7,
+      "name": "편의"
+    },
+    {
+      "id": 8,
+      "name": "비즈니스"
+    }
   ],
   "transactions": [
     {
@@ -378,6 +402,51 @@
       "amount": 15000,
       "transaction_date": "2026-05-09",
       "memo": "민원 관련 발급 비용"
+    },
+    {
+      "user_id": 1,
+      "category_id": 6,
+      "type": "EXPENSE",
+      "amount": 10000000,
+      "transaction_date": "2026-04-07",
+      "memo": "",
+      "id": 41
+    },
+    {
+      "user_id": 1,
+      "category_id": 6,
+      "type": "INCOME",
+      "amount": 222414,
+      "transaction_date": "2026-04-07",
+      "memo": "",
+      "id": 42
+    },
+    {
+      "user_id": 1,
+      "category_id": 6,
+      "type": "EXPENSE",
+      "amount": 2124124,
+      "transaction_date": "2026-04-07",
+      "memo": "ㅋㅋㅋㅋㅋ와우",
+      "id": 43
+    },
+    {
+      "user_id": 1,
+      "category_id": 5,
+      "type": "INCOME",
+      "amount": 214124124,
+      "transaction_date": "2026-03-31",
+      "memo": "ㄴㄻㄴㄹㄻㄴㄹㅋㅋㅋ카테고리되었나",
+      "id": 44
+    },
+    {
+      "user_id": 1,
+      "category_id": 8,
+      "type": "INCOME",
+      "amount": 123132131,
+      "transaction_date": "2026-04-08",
+      "memo": "testsetsetestsse",
+      "id": 45
     }
   ]
 }
