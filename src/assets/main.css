@@ -33,6 +33,13 @@ a,
     padding: 0 2rem;
   }
 } */
+html,
+body,
+#app {
+  background-color: #131313 !important;
+  margin: 0;
+  padding: 0;
+}
 #menu {
   float: left;
 }
