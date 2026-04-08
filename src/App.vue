@@ -6,6 +6,7 @@
       :user-profile-img="userProfileImg"
       @logout="handleLogout"
     />
+    <Nav />
     <main class="main-content">
       <router-view></router-view>
     </main>
@@ -28,10 +29,11 @@ import { useRoute, useRouter } from "vue-router";
 import { ref, onMounted } from "vue";
 import axios from "axios";
 import Header from "@/components/Header.vue";
+import Nav from '@/components/Nav.vue';
 
 export default {
-  name: "App",
-  components: { Header },
+  name: 'App',
+  components: { Header, Nav },
   setup() {
     const route = useRoute();
     const router = useRouter();
@@ -49,7 +51,7 @@ export default {
       router.push("/login");
     };
     const handleAddClick = () => {
-      alert("내역 추가 창을 띄울 예정입니다!");
+      alert('내역 추가 창을 띄울 예정입니다!');
     };
 
     return {
