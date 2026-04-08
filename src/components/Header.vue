@@ -5,7 +5,6 @@
       width: 100%;
       top: 0;
       left: 0;
-      right: 0;
       height: 64px;
       background-color: #131313;
       border-bottom: 2px solid #f8a70c;
@@ -14,6 +13,7 @@
       align-items: center;
       justify-content: space-between;
       padding: 0 24px;
+      z-index: 9999;
     "
   >
     <!-- 로고 & 타이틀 -->
@@ -92,14 +92,14 @@
 defineProps({
   userName: {
     type: String,
-    default: '김금융',
+    default: "김금융",
   },
   userProfileImg: {
     type: String,
-    default: 'https://api.dicebear.com/7.x/thumbs/svg?seed=금융',
+    default: "https://api.dicebear.com/7.x/thumbs/svg?seed=금융",
   },
 });
 
-const emit = defineEmits(['logout']);
-const handleLogout = () => emit('logout');
+const emit = defineEmits(["logout"]);
+const handleLogout = () => emit("logout");
 </script>
