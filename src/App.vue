@@ -11,7 +11,11 @@
     </main>
     <!-- 마이페이지 빼고 + 버튼 생성 -->
     <button
-      v-if="route.path !== '/mypage'"
+      v-if="
+        route.path !== '/mypage' &&
+        route.path !== '/login' &&
+        route.path !== '/register'
+      "
       class="fab-button"
       @click="handleAddClick"
     >
