@@ -76,6 +76,11 @@
             :key="tx.id"
             class="tx-row"
             :class="tx.type === 'INCOME' ? 'tx-row--income' : 'tx-row--expense'"
+            role="button"
+            tabindex="0"
+            @click="openDetail(tx)"
+            @keydown.enter.prevent="openDetail(tx)"
+            @keydown.space.prevent="openDetail(tx)"
           >
             <div class="tx-date">
               <span>{{ formatDateParts(tx.transaction_date).mmdd }}</span>
@@ -99,6 +104,130 @@
       </div>
     </template>
     </div>
+
+    <Teleport to="body">
+      <div
+        v-if="detailOpen"
+        class="tx-modal-backdrop"
+        aria-hidden="false"
+        @click.self="closeDetail"
+      >
+        <div
+          class="tx-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="tx-modal-title"
+          @click.stop
+        >
+          <div class="tx-modal-head">
+            <h2 id="tx-modal-title" class="tx-modal-title">내역 상세</h2>
+            <button
+              type="button"
+              class="tx-modal-close"
+              aria-label="닫기"
+              @click="closeDetail"
+            >
+              ×
+            </button>
+          </div>
+
+          <form class="tx-modal-form" @submit.prevent="saveDetail">
+            <div class="tx-modal-field">
+              <label class="tx-modal-label" for="txm-type">구분</label>
+              <select
+                id="txm-type"
+                v-model="detailForm.type"
+                class="tx-modal-input"
+                required
+              >
+                <option value="INCOME">수입</option>
+                <option value="EXPENSE">지출</option>
+              </select>
+            </div>
+
+            <div class="tx-modal-field">
+              <label class="tx-modal-label" for="txm-amount">금액</label>
+              <input
+                id="txm-amount"
+                v-model="detailForm.amount"
+                type="text"
+                inputmode="numeric"
+                autocomplete="off"
+                class="tx-modal-input"
+                required
+              />
+            </div>
+
+            <div class="tx-modal-field">
+              <label class="tx-modal-label" for="txm-date">거래일</label>
+              <input
+                id="txm-date"
+                v-model="detailForm.transaction_date"
+                type="date"
+                class="tx-modal-input"
+                required
+              />
+            </div>
+
+            <div class="tx-modal-field">
+              <label class="tx-modal-label" for="txm-cat">카테고리</label>
+              <select
+                id="txm-cat"
+                v-model.number="detailForm.category_id"
+                class="tx-modal-input"
+                required
+              >
+                <option v-for="c in categories" :key="c.id" :value="c.id">
+                  {{ c.name }}
+                </option>
+              </select>
+            </div>
+
+            <div class="tx-modal-field">
+              <label class="tx-modal-label" for="txm-memo">메모</label>
+              <textarea
+                id="txm-memo"
+                v-model="detailForm.memo"
+                class="tx-modal-input tx-modal-textarea"
+                rows="3"
+                placeholder="내용"
+              />
+            </div>
+
+            <p v-if="detailSaveErr" class="tx-modal-err">{{ detailSaveErr }}</p>
+            <p v-if="detailSaveOk" class="tx-modal-ok">저장되었습니다.</p>
+
+            <div class="tx-modal-actions">
+              <button
+                type="button"
+                class="tx-modal-btn tx-modal-btn--danger"
+                :disabled="detailSaving || detailDeleting"
+                @click="deleteDetail"
+              >
+                {{ detailDeleting ? '삭제 중…' : '삭제' }}
+              </button>
+              <div class="tx-modal-actions-right">
+                <button
+                  type="button"
+                  class="tx-modal-btn tx-modal-btn--ghost"
+                  :disabled="detailSaving || detailDeleting"
+                  @click="closeDetail"
+                >
+                  닫기
+                </button>
+                <button
+                  type="submit"
+                  class="tx-modal-btn tx-modal-btn--primary"
+                  :disabled="detailSaving || detailDeleting"
+                >
+                  {{ detailSaving ? '저장 중…' : '저장' }}
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -107,7 +236,14 @@
  * List.vue — 내역(카테고리별 / 월별 / 일별)
  * 데이터: json-server(db.json) → Vite 프록시 /api
  */
-import { ref, computed, onMounted } from 'vue';
+import {
+  ref,
+  computed,
+  reactive,
+  watch,
+  onMounted,
+  onUnmounted,
+} from 'vue';
 import axios from 'axios';
 
 /** API 베이스 (vite.config proxy → localhost:3000) */
@@ -135,6 +271,110 @@ const transactions = ref([]);
 const categories = ref([]);
 /** users[0].id 로 거래 필터 (로그인 연동 전 임시) */
 const activeUserId = ref(null);
+
+/** 행 클릭 시 상세 모달 */
+const detailOpen = ref(false);
+const editingId = ref(null);
+const detailSaving = ref(false);
+const detailDeleting = ref(false);
+const detailSaveErr = ref(null);
+const detailSaveOk = ref(false);
+const detailForm = reactive({
+  type: 'EXPENSE',
+  amount: '',
+  transaction_date: '',
+  category_id: 1,
+  memo: '',
+});
+
+function openDetail(tx) {
+  editingId.value = tx.id;
+  detailForm.type = tx.type === 'INCOME' ? 'INCOME' : 'EXPENSE';
+  detailForm.amount =
+    tx.amount != null && tx.amount !== '' ? String(tx.amount) : '';
+  detailForm.transaction_date = tx.transaction_date || '';
+  detailForm.category_id =
+    Number(tx.category_id) || categories.value[0]?.id || 1;
+  detailForm.memo = tx.memo ?? '';
+  detailSaveErr.value = null;
+  detailSaveOk.value = false;
+  detailOpen.value = true;
+}
+
+function closeDetail() {
+  detailOpen.value = false;
+  editingId.value = null;
+  detailSaveErr.value = null;
+  detailSaveOk.value = false;
+}
+
+function parseAmountFromText(text) {
+  const cleaned = String(text).replace(/,/g, '').replace(/\s/g, '');
+  if (cleaned === '') return NaN;
+  const n = Number.parseInt(cleaned, 10);
+  return Number.isFinite(n) ? n : NaN;
+}
+
+async function saveDetail() {
+  const id = editingId.value;
+  if (id == null) return;
+  detailSaveErr.value = null;
+  detailSaveOk.value = false;
+  const amountNum = parseAmountFromText(detailForm.amount);
+  if (!Number.isFinite(amountNum) || amountNum < 0) {
+    detailSaveErr.value = '금액을 0 이상의 숫자로 입력해 주세요.';
+    return;
+  }
+  detailSaving.value = true;
+  try {
+    await axios.patch(`${API_BASE}/transactions/${id}`, {
+      type: detailForm.type,
+      amount: amountNum,
+      transaction_date: detailForm.transaction_date,
+      category_id: Number(detailForm.category_id),
+      memo: detailForm.memo,
+    });
+    detailSaveOk.value = true;
+    await loadData();
+  } catch {
+    detailSaveErr.value = '저장에 실패했습니다.';
+  } finally {
+    detailSaving.value = false;
+  }
+}
+
+async function deleteDetail() {
+  const id = editingId.value;
+  if (id == null) return;
+  if (!confirm('이 내역을 삭제할까요?')) return;
+  detailDeleting.value = true;
+  detailSaveErr.value = null;
+  try {
+    await axios.delete(`${API_BASE}/transactions/${id}`);
+    closeDetail();
+    await loadData();
+  } catch {
+    detailSaveErr.value = '삭제에 실패했습니다.';
+  } finally {
+    detailDeleting.value = false;
+  }
+}
+
+function onDocKeydown(e) {
+  if (e.key === 'Escape' && detailOpen.value) {
+    e.preventDefault();
+    closeDetail();
+  }
+}
+
+watch(detailOpen, (open) => {
+  document.body.style.overflow = open ? 'hidden' : '';
+});
+
+onUnmounted(() => {
+  document.removeEventListener('keydown', onDocKeydown);
+  document.body.style.overflow = '';
+});
 
 // ---------- 탭·표시 보조 ----------
 /** 월·일 탭에서만 행에 카테고리명 표시 (카테고리 탭은 그룹이 곧 카테고리) */
@@ -375,7 +615,10 @@ async function loadData() {
   }
 }
 
-onMounted(loadData);
+onMounted(() => {
+  document.addEventListener('keydown', onDocKeydown);
+  loadData();
+});
 </script>
 
 <style scoped>
@@ -560,12 +803,219 @@ onMounted(loadData);
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  padding: 12px 0;
+  padding: 12px 6px;
   border-bottom: 1px solid var(--line);
+  cursor: pointer;
+  border-radius: 8px;
+  margin: 0 -6px;
+  transition: background 0.15s ease;
+}
+
+.tx-row:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.tx-row:focus-visible {
+  outline: 2px solid var(--kb-yellow);
+  outline-offset: 2px;
 }
 
 .tx-row:last-child {
   border-bottom: none;
+}
+
+/* 상세 모달 (Teleport → body, 글로벌 톤) */
+.tx-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 16px;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+}
+
+.tx-modal {
+  width: 100%;
+  max-width: 400px;
+  max-height: min(90vh, 640px);
+  overflow: auto;
+  box-sizing: border-box;
+  background: #0a0a0a;
+  color: #ffffff;
+  border-radius: 16px;
+  /* 모달 겉 테두리 색은 여기서 변경 (예: 1px solid #ffbc00) */
+  border: 1px solid rgba(255, 188, 0, 0.35);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+  font-family: inherit;
+}
+
+.tx-modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 16px 12px;
+  border-bottom: 1px solid #2a2a2a;
+}
+
+.tx-modal-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.tx-modal-close {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 10px;
+  background: #1a1a1a;
+  color: #888888;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    color 0.15s ease,
+    background 0.15s ease;
+}
+
+.tx-modal-close:hover {
+  color: #ffbc00;
+  background: rgba(255, 188, 0, 0.12);
+}
+
+.tx-modal-form {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.tx-modal-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tx-modal-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #60584c;
+  text-transform: uppercase;
+}
+
+.tx-modal-input {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #2a2a2a;
+  background: #1a1a1a;
+  color: #ffffff;
+  font-size: 0.9rem;
+  font-family: inherit;
+}
+
+.tx-modal-input:focus {
+  outline: none;
+  border-color: #ffbc00;
+  box-shadow: 0 0 0 1px rgba(255, 188, 0, 0.25);
+}
+
+/* Chrome/Edge/Safari: 날짜 필드 달력 아이콘을 KB 옐로(#ffbc00)에 가깝게 */
+.tx-modal-input[type='date'] {
+  color-scheme: var(--kb-yellow);
+}
+
+.tx-modal-input[type='date']::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 1;
+  filter: invert(73%) sepia(96%) saturate(2000%) hue-rotate(359deg) brightness(103%) contrast(102%);
+}
+
+.tx-modal-textarea {
+  resize: vertical;
+  min-height: 72px;
+  line-height: 1.4;
+}
+
+.tx-modal-err {
+  margin: 0;
+  font-size: 0.82rem;
+  color: #ff9e9e;
+}
+
+.tx-modal-ok {
+  margin: 0;
+  font-size: 0.82rem;
+  color: #ffbc00;
+}
+
+.tx-modal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.tx-modal-actions-right {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.tx-modal-btn {
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  border: 1px solid #2a2a2a;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+
+.tx-modal-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.tx-modal-btn--ghost {
+  background: #1a1a1a;
+  color: #888888;
+}
+
+.tx-modal-btn--ghost:hover:not(:disabled) {
+  color: #ffffff;
+  border-color: #60584c;
+}
+
+.tx-modal-btn--primary {
+  background: rgba(255, 188, 0, 0.15);
+  color: #ffffff;
+  border-color: #ffbc00;
+}
+
+.tx-modal-btn--primary:hover:not(:disabled) {
+  background: rgba(255, 188, 0, 0.22);
+}
+
+.tx-modal-btn--danger {
+  background: rgba(255, 80, 80, 0.12);
+  color: #ff9e9e;
+  border-color: rgba(255, 100, 100, 0.35);
+}
+
+.tx-modal-btn--danger:hover:not(:disabled) {
+  background: rgba(255, 80, 80, 0.2);
 }
 
 .tx-date {
