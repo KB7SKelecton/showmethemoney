@@ -3,10 +3,6 @@
   <div class="main-layout">
     <nav class="header-bar">
       <div class="logo">홈/달력</div>
-      <div class="user-info" v-if="userData">
-        <img :src="userData.profile_image_url" class="profile-img" />
-        <span>{{ userData.nickname }}님 환영합니다</span>
-      </div>
     </nav>
 
     <!-- 달력 컨트롤러 -->
@@ -387,12 +383,22 @@ const totalMonthlyExpense = computed(() => {
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  grid-auto-rows: minmax(70px, auto);
+  grid-template-rows: auto repeat(6, 1fr);
+  grid-auto-rows: minmax(50px, auto);
   background: rgba(255, 255, 255, 0.05); /* 격자 선 역할 */
   gap: 1px;
   border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 1px;
   overflow: hidden;
+}
+
+/* (보너스) 상단 월 컨트롤러 마진 고정 */
+.calendar-control {
+  height: 40px; /* 컨트롤러 영역도 높이 고정 */
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
 }
 
 /* 요일 라벨 */
@@ -615,11 +621,25 @@ const totalMonthlyExpense = computed(() => {
   padding: 8px 12px;
   display: inline-flex;
   flex-direction: column;
+  justify-content: center;
   align-items: flex-start;
   gap: 2px;
   flex: 1;
+  height: 100%;
   min-width: 0; /* flex box 안에서 텍스트에 의해 늘어나는 것 방지 */
   border: 1px solid rgba(255, 255, 255, 0.05);
+  height: 100%;
+  flex: 1;
+}
+.summary-container {
+  display: flex;
+  gap: 8px;
+  padding: 10px 0;
+  flex-wrap: nowrap;
+  width: 100%;
+  height: 80px; /* 높이를 고정하여 달력을 밀어내지 않게 함 */
+  box-sizing: border-box;
+  flex-shrink: 0;
 }
 
 .balance-label {
@@ -631,9 +651,13 @@ const totalMonthlyExpense = computed(() => {
 }
 
 .balance-amount {
-  font-size: 1rem;
+  font-size: 1.1rem;
   font-weight: 700;
   color: #e5e2e1;
+  white-space: nowrap; /* 줄바꿈 금지 */
+  overflow: hidden; /* 넘치는 부분 숨김 */
+  text-overflow: ellipsis; /* 너무 길면 ... 처리 */
+  width: 100%;
 }
 .summary-container {
   display: flex;
