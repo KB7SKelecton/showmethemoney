@@ -90,7 +90,6 @@ import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
 import Chart from '@/components/Chart.vue';
-
 const router = useRouter();
 
 const balance = ref(0);
@@ -187,8 +186,8 @@ function onAvatarChange(event) {
 
 /* 마이페이지 제목 */
 .mypage-title {
-  font-size: 3.5rem;
-  font-weight: 500;
+  font-size: 2rem;
+  font-weight: 400;
   color: #e5e2e1;
   margin: 0 0 20px 0;
   letter-spacing: -0.03em;
@@ -220,19 +219,6 @@ function onAvatarChange(event) {
   font-size: 1.6rem;
   font-weight: 700;
   color: #e5e2e1;
-}
-
-/* 오른쪽 사이드바: 고정 너비, 화면 전체 높이 */
-.mypage-sidebar {
-  width: 280px;
-  min-height: 100vh;
-  background-color: #131313;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items: center;
-  padding: 48px 24px 32px;
-  border-left: 1px solid rgba(82, 69, 51, 0.2);
 }
 
 /* 사이드바 위쪽 프로필 영역 */
