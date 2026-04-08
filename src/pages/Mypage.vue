@@ -11,75 +11,8 @@
           <span class="balance-amount"
             >잔고 : {{ balance.toLocaleString() }}원</span
           >
-          <Chart />
         </div>
-      </div>
-    </div>
-
-    <!-- 오른쪽 사이드바 -->
-    <div class="mypage-sidebar">
-      <!-- 사이드바 위쪽: 프로필 영역 -->
-      <div class="sidebar-top">
-        <!-- 프로필 이미지: 클릭하면 숨겨진 파일 input 실행 -->
-        <div class="profile-avatar" @click="$refs.avatarInput.click()">
-          <!-- avatar 값 있으면 이미지 표시, 없으면 기본 사람 아이콘 표시 -->
-          <img v-if="user.avatar" :src="user.avatar" alt="프로필" />
-          <i v-else class="fa-solid fa-user profile-default-icon"></i>
-          <!-- 호버 시 나타나는 카메라 아이콘 오버레이 -->
-          <div class="avatar-overlay">
-            <i class="fa-solid fa-camera"></i>
-          </div>
-          <!-- 인증 뱃지 -->
-          <div class="verified-badge">
-            <i class="fa-solid fa-check"></i>
-          </div>
-        </div>
-
-        <!-- 숨겨진 파일 input: profile-avatar 클릭 시 여기가 실행됨 -->
-        <input
-          ref="avatarInput"
-          type="file"
-          accept="image/*"
-          style="display: none"
-          @change="onAvatarChange"
-        />
-
-        <!-- 이름: isEditingName이 false면 텍스트, true면 input으로 바뀜 -->
-        <p v-if="!isEditingName" class="profile-name" @click="startEdit">
-          {{ user.name }} <i class="fa-solid fa-pen"></i>
-        </p>
-        <!-- 이름 수정 input: blur(바깥클릭) 또는 Enter 입력 시 finishEdit 실행 -->
-        <input
-          v-else
-          class="profile-name-input"
-          v-model="user.name"
-          @blur="finishEdit"
-          @keyup.enter="finishEdit"
-          autofocus
-        />
-
-        <!-- 이메일: isEditingEmail이 false면 텍스트, true면 input으로 바뀜 -->
-        <p v-if="!isEditingEmail" class="profile-email" @click="startEditEmail">
-          {{ user.email }} <i class="fa-solid fa-pen"></i>
-        </p>
-        <!-- 이메일 수정 input: blur(바깥클릭) 또는 Enter 입력 시 finishEditEmail 실행 -->
-        <input
-          v-else
-          class="profile-email-input"
-          v-model="user.email"
-          @blur="finishEditEmail"
-          @keyup.enter="finishEditEmail"
-          autofocus
-        />
-      </div>
-
-      <!-- 사이드바 아래쪽: 로그아웃 버튼 영역 -->
-      <div class="sidebar-bottom">
-        <button class="logout-btn" @click="logout">
-          <i class="fa-solid fa-right-from-bracket"></i>
-          로그아웃
-        </button>
-        <p class="secured-text">SECURED BY Show Me The Money</p>
+        <Chart />
       </div>
     </div>
   </div>
@@ -219,19 +152,6 @@ function onAvatarChange(event) {
   font-size: 1.6rem;
   font-weight: 700;
   color: #e5e2e1;
-}
-
-/* 오른쪽 사이드바: 고정 너비, 화면 전체 높이 */
-.mypage-sidebar {
-  width: 280px;
-  min-height: 100vh;
-  background-color: #131313;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items: center;
-  padding: 48px 24px 32px;
-  border-left: 1px solid rgba(82, 69, 51, 0.2);
 }
 
 /* 사이드바 위쪽 프로필 영역 */
