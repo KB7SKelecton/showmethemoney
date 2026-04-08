@@ -1,7 +1,10 @@
 <template>
+  <!-- 내역 화면 루트: KB 다크 테마, scoped 스타일 적용 -->
   <div class="list-screen">
+    <!-- 상단: 제목 + 탭(카테고리/월/일) + 탭별 안내 문구 -->
     <header class="page-head">
       <h1 class="page-title">내역</h1>
+      <!-- 탭 전환: activeTab(category | month | day) 과 동기화 -->
       <nav class="list-tabs" role="tablist" aria-label="내역 보기 방식">
         <button
           type="button"
@@ -37,6 +40,7 @@
       <p class="page-sub">{{ tabHint }}</p>
     </header>
 
+    <!-- 로딩 / API 오류 / 사용자 없음 / 데이터 없음 -->
     <div v-if="loading" class="state-msg">불러오는 중…</div>
     <div v-else-if="error" class="state-msg state-err">{{ error }}</div>
     <p v-else-if="activeUserId == null" class="state-msg state-err">
@@ -44,12 +48,14 @@
     </p>
     <p v-else-if="!panelGroups.length" class="state-msg">표시할 내역이 없습니다.</p>
 
+    <!-- 탭에 맞춰 panelGroups로 통일된 그룹 헤더 + 거래 행 리스트 -->
     <template v-else>
       <div
         v-for="group in panelGroups"
         :key="group.key"
         class="ledger-block"
       >
+        <!-- 그룹 요약: 아이콘, 제목/부제, 해당 그룹 수입·지출 합계 -->
         <div class="ledger-head">
           <div class="ledger-icon" aria-hidden="true">{{ group.icon }}</div>
           <div class="ledger-labels">
@@ -98,11 +104,17 @@
 </template>
 
 <script setup>
+/**
+ * List.vue — 내역(카테고리별 / 월별 / 일별)
+ * 데이터: json-server(db.json) → Vite 프록시 /api
+ */
 import { ref, computed, onMounted } from 'vue';
 import axios from 'axios';
 
+/** API 베이스 (vite.config proxy → localhost:3000) */
 const API_BASE = '/api';
 
+/** DB categories에는 name만 있을 때를 대비한 UI 보조(영문 라벨·아이콘) */
 const CATEGORY_UI = {
   1: { en: 'ADMIN', icon: '📋' },
   2: { en: 'EDUCATION', icon: '📚' },
@@ -114,13 +126,19 @@ const CATEGORY_UI = {
   8: { en: 'BUSINESS', icon: '💼' },
 };
 
+// ---------- 화면 상태 ----------
+/** 현재 탭: category | month | day */
 const activeTab = ref('category');
 const loading = ref(true);
 const error = ref(null);
+/** API에서 받은 원본 */
 const transactions = ref([]);
 const categories = ref([]);
+/** users[0].id 로 거래 필터 (로그인 연동 전 임시) */
 const activeUserId = ref(null);
 
+// ---------- 탭·표시 보조 ----------
+/** 선택된 탭에 맞는 헤더 아래 설명 문구 */
 const tabHint = computed(() => {
   const m = {
     category: 'DB의 거래를 카테고리별로 묶어 수입·지출을 함께 표시합니다.',
@@ -130,8 +148,10 @@ const tabHint = computed(() => {
   return m[activeTab.value] ?? m.category;
 });
 
+/** 월·일 탭에서만 행에 카테고리명 표시 (카테고리 탭은 그룹이 곧 카테고리) */
 const showCategoryMeta = computed(() => activeTab.value !== 'category');
 
+/** category_id → 카테고리 객체 빠른 조회 */
 const catById = computed(
   () => new Map(categories.value.map((c) => [c.id, c])),
 );
@@ -140,6 +160,7 @@ function categoryName(cid) {
   return catById.value.get(cid)?.name ?? '—';
 }
 
+/** 카테고리별 탭 그룹 헤더용 부제·아이콘 */
 function uiForCategory(cat, id) {
   const u = CATEGORY_UI[id];
   const base = u?.en ?? cat?.name ?? 'CATEGORY';
@@ -149,16 +170,19 @@ function uiForCategory(cat, id) {
   };
 }
 
+// ---------- 포맷·정렬 유틸 ----------
 function formatWon(n) {
   return Math.abs(Number(n) || 0).toLocaleString('ko-KR');
 }
 
+/** 수입은 +, 지출은 - 접두 */
 function formatTxAmount(amount, type) {
   const abs = formatWon(amount);
   if (type === 'INCOME') return `+ ${abs}₩`;
   return `- ${abs}₩`;
 }
 
+/** 행 왼쪽: MM/DD + 요일 (DB는 날짜만 있음) */
 function formatDateParts(isoDate) {
   if (!isoDate) return { mmdd: '—', sub: '' };
   const d = new Date(`${isoDate}T12:00:00`);
@@ -178,6 +202,8 @@ function sortTxItems(items) {
   });
 }
 
+// ---------- 그룹핑(탭별) ----------
+/** 로그인 사용자에 해당하는 거래만 */
 const userTransactions = computed(() => {
   const uid = activeUserId.value;
   if (uid == null) return [];
@@ -221,6 +247,7 @@ const categoryGroups = computed(() => {
   );
 });
 
+/** 월별: YYYY-MM 기준, 최신 월이 위로 */
 const monthGroups = computed(() => {
   const byMonth = new Map();
 
@@ -302,6 +329,7 @@ const dayGroups = computed(() => {
   return list;
 });
 
+/** 현재 탭에 맞는 그룹을 동일한 형태로 매핑 → 템플릿은 한 벌만 사용 */
 const panelGroups = computed(() => {
   if (activeTab.value === 'category') {
     return categoryGroups.value.map((g) => ({
@@ -362,6 +390,7 @@ onMounted(loadData);
 </script>
 
 <style scoped>
+/* ===== 레이아웃·테마 토큰 ===== */
 .list-screen {
   --kb-yellow: #ffbc00;
   --kb-yellow-soft: #ffcc00;
@@ -400,6 +429,7 @@ onMounted(loadData);
   letter-spacing: -0.02em;
 }
 
+/* 탭 버튼 행 */
 .list-tabs {
   display: flex;
   flex-wrap: wrap;
@@ -438,12 +468,14 @@ onMounted(loadData);
   background: rgba(255, 188, 0, 0.08);
 }
 
+/* 탭 아래 설명 문구 */
 .page-sub {
   margin: 0;
   font-size: 0.8rem;
   color: var(--muted);
 }
 
+/* 로딩·에러·빈 목록 메시지 */
 .state-msg {
   text-align: center;
   padding: 48px 16px;
@@ -455,6 +487,7 @@ onMounted(loadData);
   color: #ff9e9e;
 }
 
+/* 그룹(카테고리·월·일) 블록 간격 */
 .ledger-block {
   margin-bottom: 36px;
 }
@@ -463,6 +496,7 @@ onMounted(loadData);
   margin-bottom: 0;
 }
 
+/* 그룹 헤더: 아이콘 + 제목/부제 + 수입·지출 합계 */
 .ledger-head {
   display: flex;
   align-items: flex-start;
@@ -470,6 +504,7 @@ onMounted(loadData);
   margin-bottom: 12px;
 }
 
+/* 그룹 아이콘 박스 */
 .ledger-icon {
   width: 44px;
   height: 44px;
@@ -505,6 +540,7 @@ onMounted(loadData);
   text-transform: uppercase;
 }
 
+/* 그룹 우측 합계: 수입(연한 옐로) / 지출(메인 옐로) */
 .ledger-totals {
   display: flex;
   flex-direction: column;
@@ -514,6 +550,7 @@ onMounted(loadData);
   text-align: right;
 }
 
+/* 합계 숫자 공통 */
 .sum {
   font-size: 0.88rem;
   font-weight: 800;
@@ -528,12 +565,14 @@ onMounted(loadData);
   color: var(--kb-yellow);
 }
 
+/* 거래 목록 */
 .tx-list {
   list-style: none;
   margin: 0;
   padding: 0;
 }
 
+/* 거래 한 줄: 수입·지출에 따라 뱃지 색만 구분 */
 .tx-row {
   display: flex;
   align-items: flex-start;
@@ -557,11 +596,13 @@ onMounted(loadData);
   line-height: 1.2;
 }
 
+/* 날짜 두 번째 줄(요일) */
 .tx-subdate {
   font-size: 0.65rem;
   opacity: 0.85;
 }
 
+/* 메모·카테고리(조건부)·뱃지 */
 .tx-body {
   flex: 1;
   min-width: 0;
@@ -570,6 +611,7 @@ onMounted(loadData);
   gap: 4px;
 }
 
+/* 수입/지출 뱃지 기본 */
 .tx-badge {
   display: inline-block;
   align-self: flex-start;
@@ -582,16 +624,19 @@ onMounted(loadData);
   color: var(--muted);
 }
 
+/* 수입 행 뱃지 */
 .tx-row--income .tx-badge {
   color: var(--kb-yellow-soft);
   background: rgba(255, 204, 0, 0.12);
 }
 
+/* 지출 행 뱃지 */
 .tx-row--expense .tx-badge {
   color: var(--kb-yellow);
   background: rgba(255, 188, 0, 0.1);
 }
 
+/* 거래 메모(제목) */
 .tx-title {
   font-size: 0.88rem;
   font-weight: 600;
@@ -600,11 +645,13 @@ onMounted(loadData);
   word-break: break-word;
 }
 
+/* 월·일 탭에서 카테고리명 */
 .tx-meta {
   font-size: 0.72rem;
   color: var(--kb-gray);
 }
 
+/* 행 우측 금액 */
 .tx-amount {
   font-size: 0.88rem;
   font-weight: 600;
@@ -621,6 +668,7 @@ onMounted(loadData);
   color: var(--text);
 }
 
+/* ===== 모바일: 하단 네비·FAB 여백, 탭 세로 스택 ===== */
 @media (max-width: 767px) {
   .list-screen {
     margin: -20px -20px 0;
