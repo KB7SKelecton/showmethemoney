@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from "vue-router";
+import { createRouter, createWebHistory } from 'vue-router';
 
 import Home from '@/pages/Home.vue';
 import List from '@/pages/List.vue';
@@ -13,11 +13,11 @@ const router = createRouter({
     { path: '/list', name: 'list', component: List },
     { path: '/register', name: 'register', component: RegisterPage },
     { path: '/login', name: 'login', component: Login },
-    { path: "/mypage", name: "mypage", component: MyPage },
+    { path: '/mypage', name: 'mypage', component: MyPage },
   ],
 });
 
-router.beforeEach((to, from, next) => {
+/* router.beforeEach((to, from, next) => {
   const loggedInUser = localStorage.getItem('user');
   const isLoginPage = to.path === '/login';
 
@@ -29,6 +29,6 @@ router.beforeEach((to, from, next) => {
   } else {
     next();
   }
-});
+}); */
 
 export default router;
