@@ -1,12 +1,10 @@
-import { createRouter, createWebHistory } from "vue-router";
+import { createRouter, createWebHistory } from 'vue-router';
 
 import Home from '@/pages/Home.vue';
 import List from '@/pages/List.vue';
 import RegisterPage from '@/pages/RegisterPage.vue';
 import Login from '@/pages/Login.vue';
-import Home from "@/pages/Home.vue";
-import List from "@/pages/List.vue";
-import MyPage from "@/pages/MyPage.vue";
+import MyPage from '@/pages/MyPage.vue';
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -15,11 +13,11 @@ const router = createRouter({
     { path: '/list', name: 'list', component: List },
     { path: '/register', name: 'register', component: RegisterPage },
     { path: '/login', name: 'login', component: Login },
-    { path: "/mypage", name: "mypage", component: MyPage },
+    { path: '/mypage', name: 'mypage', component: MyPage },
   ],
 });
 
-router.beforeEach((to, from, next) => {
+/* router.beforeEach((to, from, next) => {
   const loggedInUser = localStorage.getItem('user');
   const isLoginPage = to.path === '/login';
 
@@ -31,6 +29,6 @@ router.beforeEach((to, from, next) => {
   } else {
     next();
   }
-});
+}); */
 
 export default router;

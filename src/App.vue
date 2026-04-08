@@ -1,6 +1,7 @@
 <template>
   <div class="app-layout">
-    <Header />
+    <Nav />
+    <!-- <Header /> -->
     <main class="main-content">
       <router-view></router-view>
     </main>
@@ -15,17 +16,18 @@
   </div>
 </template>
 <script>
-import Header from "@/components/Header.vue";
-import { useRoute } from "vue-router"; // 추가!
+import Header from '@/components/Header.vue';
+import Nav from '@/components/Nav.vue';
+import { useRoute } from 'vue-router'; // 추가!
 
 export default {
-  name: "App",
-  components: { Header },
+  name: 'App',
+  components: { Header, Nav },
   setup() {
     const route = useRoute(); // 추가!
 
     const handleAddClick = () => {
-      alert("내역 추가 창을 띄울 예정입니다!");
+      alert('내역 추가 창을 띄울 예정입니다!');
     };
 
     return { handleAddClick, route }; // route 추가!
