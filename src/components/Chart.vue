@@ -160,15 +160,19 @@ const centerTextPlugin = {
     ctx.save();
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillStyle = '#aaaaaa';
-    ctx.font = '600 1.2rem sans-serif';
-    ctx.fillText('총 지출액', width / 2, top + height / 2 - 25);
+
+    // "총 지출액" - 색상을 더 밝게, 크기를 키움
+    ctx.fillStyle = '#bbbbbb';
+    ctx.font = '600 1.1rem "Pretendard", sans-serif';
+    ctx.fillText('총 지출액', width / 2, top + height / 2 - 22);
+
+    // 금액 숫자 - 화이트로 명확하게
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 2.2rem sans-serif'; // 금액 폰트 대폭 확대
+    ctx.font = '700 2rem "Pretendard", sans-serif';
     ctx.fillText(
       `${dashboardData.value.total.toLocaleString()}원`,
       width / 2,
-      top + height / 2 + 20,
+      top + height / 2 + 18,
     );
     ctx.restore();
   },
@@ -250,120 +254,92 @@ const changeMonth = (offset) => {
 </template>
 
 <style scoped>
-/* 전체 폰트 및 가독성 향상 스타일 */
 .dashboard-container {
   background-color: #000;
-  color: #fff;
-  padding: 30px;
-  font-family: 'Pretendard', sans-serif;
+  color: #ffffff; /* 기본 글자색을 완전 화이트로 */
+  padding: 40px;
+  font-family:
+    'Pretendard',
+    -apple-system,
+    BlinkMacSystemFont,
+    system-ui,
+    sans-serif;
+  line-height: 1.6; /* 행간을 넓혀 가독성 확보 */
 }
 
 .card {
-  background-color: #121212;
-  border-radius: 32px;
-  padding: 40px;
-  border: 1px solid #222;
-  margin-bottom: 25px;
+  background-color: #1a1a1a; /* 카드 배경을 약간 밝게 하여 대비 명확화 */
+  border-radius: 24px;
+  padding: 35px;
+  border: 1px solid #333;
+  margin-bottom: 30px;
 }
 
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 35px;
-}
-
-/* 텍스트 크기 강화 */
+/* 제목 및 텍스트 계층 구조 */
 h3 {
-  font-size: 1.4rem;
-  margin: 0;
+  font-size: 1.5rem; /* 제목 크기 확대 */
   font-weight: 800;
-  color: #fff;
+  color: #ffffff;
+  letter-spacing: -0.03em;
 }
+
 .subtitle {
-  color: #888;
-  font-size: 0.8rem;
-  margin-top: 8px;
+  color: #aaaaaa; /* 부제목도 조금 더 밝게 */
+  font-size: 1rem;
+  margin-top: 6px;
 }
+
 .highlight {
-  color: #f8a70c;
+  color: #ffb421; /* 골드 색상 채도를 높임 */
   font-size: 1.1rem;
   font-weight: 700;
-  margin-top: 8px;
 }
 
 /* 네비게이션 가독성 */
-.month-nav {
-  background: #1a1a1a;
-  padding: 12px 25px;
-  border-radius: 16px;
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  border: 1px solid #333;
-}
-.nav-btn {
-  background: none;
-  border: none;
-  color: #f8a70c;
-  cursor: pointer;
-  font-size: 1.3rem;
-  font-weight: bold;
-}
 .nav-date {
-  font-weight: 700;
+  font-weight: 800;
+  font-size: 1.3rem; /* 날짜 크기 확대 */
+  color: #ffffff;
+}
+
+.nav-btn {
   font-size: 1.2rem;
-  color: #fff;
+  color: #ffb421;
+  padding: 5px 10px;
 }
 
-/* 차트 높이 고정 */
-.main-bar {
-  height: 350px;
-}
-.donut-box {
-  height: 320px;
-}
-.bottom-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 25px;
-}
-
-/* 상세 내역 리스트 가독성 (대폭 강화) */
+/* 상세 리스트 가독성 (가장 중요한 부분) */
 .detail-list li {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 25px 0;
-  border-bottom: 1px solid #222;
-}
-.dot {
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-}
-.cat-name {
-  font-size: 1.4rem;
-  font-weight: 600;
-  color: #efefef;
-}
-.percent {
-  display: block;
-  font-size: 1.8rem;
-  font-weight: 900;
-  color: #fff;
-  margin-bottom: 4px;
-}
-.amount {
-  font-size: 1.1rem;
-  color: #999;
-  font-weight: 500;
+  padding: 22px 0;
+  border-bottom: 1px solid #2a2a2a;
 }
 
+.cat-name {
+  font-size: 1.2rem; /* 카테고리명 확대 */
+  font-weight: 600;
+  color: #f0f0f0;
+}
+
+.percent {
+  font-size: 1.4rem; /* 퍼센트 수치 강조 */
+  font-weight: 800;
+  color: #ffb421;
+  margin-right: 15px;
+}
+
+.amount {
+  font-size: 1.25rem; /* 금액 크기 확대 */
+  color: #ffffff;
+  font-weight: 700;
+  min-width: 110px;
+  display: inline-block;
+  text-align: right;
+}
+
+/* 로딩 상태 */
 .loading-state {
-  color: #f8a70c;
-  text-align: center;
-  padding: 100px;
-  font-size: 1.5rem;
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 1.2rem;
 }
 </style>
