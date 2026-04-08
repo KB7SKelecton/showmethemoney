@@ -1,14 +1,14 @@
 <template>
   <header
     style="
-      position: fixed;
+      position: sticky;
       width: 100%;
       top: 0;
       left: 0;
       height: 64px;
       background-color: #131313;
       border-bottom: 2px solid #f8a70c;
-      z-index: 60;
+      z-index: 9999;
       display: flex;
       align-items: center;
       justify-content: space-between;

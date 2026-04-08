@@ -34,6 +34,8 @@
   flex-direction: column;
   padding: 20px 0;
   z-index: 9998;
+  position: fixed;
+  left: 0;
 }
 .menu-group {
   flex: 1;
