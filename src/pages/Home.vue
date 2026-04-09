@@ -376,7 +376,7 @@ const totalBalance = computed(() => {
 
 .current-month {
   font-size: 1.4rem;
-  font-weight: 800;
+  font-weight: 600;
   color: #e5e2e1;
   letter-spacing: -0.02em;
 }
@@ -403,7 +403,7 @@ const totalBalance = computed(() => {
   color: #e5e2e1;
   border-radius: 8px;
   font-size: 0.8rem;
-  font-weight: 700;
+  font-weight: 600;
   border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
@@ -434,7 +434,7 @@ const totalBalance = computed(() => {
   padding: 16px 0;
   text-align: center;
   font-size: 1.2rem;
-  font-weight: 800;
+  font-weight: 600;
   background: #1c1b1b;
   color: #e5e2e1;
 }
@@ -472,7 +472,7 @@ const totalBalance = computed(() => {
 /* 날짜 숫자 */
 .date-num {
   font-size: 1.2rem;
-  font-weight: 500;
+  font-weight: 600;
   color: #f8a70c;
 }
 
@@ -482,7 +482,7 @@ const totalBalance = computed(() => {
   color: #131313;
   padding: 2px 8px;
   border-radius: 6px;
-  font-weight: 800;
+  font-weight: 600;
 }
 
 .not-current {
@@ -492,7 +492,7 @@ const totalBalance = computed(() => {
 /* 수입/지출 태그 */
 .cell-income {
   font-size: 1rem;
-  font-weight: 700;
+  font-weight: 600;
   color: #81c784; /* 부드러운 초록 */
   background: rgba(129, 199, 132, 0.1);
   padding: 2px 6px;
@@ -502,7 +502,7 @@ const totalBalance = computed(() => {
 
 .cell-expense {
   font-size: 16px;
-  font-weight: 700;
+  font-weight: 600;
   color: #ffb4ab; /* 부드러운 레드 */
   background: rgba(255, 180, 171, 0.1);
   padding: 2px 6px;
@@ -522,7 +522,7 @@ const totalBalance = computed(() => {
 
 .side-bar h3 {
   font-size: 1.25rem;
-  font-weight: 800;
+  font-weight: 600;
   color: #e5e2e1;
   margin-bottom: 24px;
 }
@@ -559,20 +559,20 @@ const totalBalance = computed(() => {
 
 .t-cat {
   font-size: 0.65rem;
-  font-weight: 800;
+  font-weight: 600;
   color: #f8a70c;
   text-transform: uppercase;
 }
 
 .t-memo {
   font-size: 0.95rem;
-  font-weight: 500;
+  font-weight: 600;
   color: #e5e2e1;
 }
 
 .t-amount {
   font-size: 1rem;
-  font-weight: 800;
+  font-weight: 600;
 }
 
 .t-amount.income {
@@ -603,11 +603,11 @@ const totalBalance = computed(() => {
 }
 .footer-row .income {
   color: #81c784;
-  font-weight: 700;
+  font-weight: 600;
 }
 .footer-row .expense {
   color: #ffb4ab;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 /* Floating Action Button */
@@ -640,7 +640,7 @@ const totalBalance = computed(() => {
   color: rgba(229, 226, 225, 0.2);
   text-align: center;
   margin-top: 60px;
-  font-size: 0.875rem;
+  font-size: 0.8rem;
   line-height: 1.6;
 }
 .mypage-balance {
@@ -680,7 +680,7 @@ const totalBalance = computed(() => {
 
 .balance-amount {
   font-size: 1.4rem;
-  font-weight: 700;
+  font-weight: 600;
   color: #e5e2e1;
   white-space: nowrap; /* 줄바꿈 금지 */
   overflow: hidden; /* 넘치는 부분 숨김 */
@@ -718,7 +718,7 @@ const totalBalance = computed(() => {
 
 .balance-amount {
   font-size: 1rem;
-  font-weight: 700;
+  font-weight: 600;
   color: #e5e2e1;
   white-space: nowrap;
 }
@@ -727,20 +727,24 @@ const totalBalance = computed(() => {
 .income-box .balance-label {
   color: #81c784;
   font-size: 1rem;
+  font-weight: 600;
 }
 .income-box .balance-amount {
   color: #81c784;
   font-size: 1rem;
+  font-weight: 600;
 }
 
 /* 지출 강조 (노란색/주황색) */
 .expense-box .balance-label {
   color: #ffb4ab;
   font-size: 1rem;
+  font-weight: 600;
 }
 .expense-box .balance-amount {
   color: #ffb4ab;
   font-size: 1rem;
+  font-weight: 600;
 }
 
 /* 통합창 강조 (이미지처럼 배경색 반전 효과 가능) */
@@ -750,10 +754,12 @@ const totalBalance = computed(() => {
 .total-box .balance-label {
   color: #1a1c1e;
   font-size: 1rem;
+  font-weight: 600;
 }
 .total-box .balance-amount {
   color: #1a1c1e;
   font-size: 1rem;
+  font-weight: 600;
 }
 
 /* 반응형 웹 767px 기준 */
@@ -789,7 +795,7 @@ const totalBalance = computed(() => {
 
   .date-num {
     font-size: 0.8rem;
-    font-weight: 500;
+    font-weight: 600;
     color: #f8a70c;
   }
 
@@ -812,26 +818,32 @@ const totalBalance = computed(() => {
   .income-box .balance-label {
     color: #81c784;
     font-size: 0.8rem;
+    font-weight: 600;
   }
   .income-box .balance-amount {
     color: #81c784;
     font-size: 0.8rem;
+    font-weight: 600;
   }
   .expense-box .balance-label {
     color: #ffb4ab;
     font-size: 0.8rem;
+    font-weight: 600;
   }
   .expense-box .balance-amount {
     color: #ffb4ab;
     font-size: 0.8rem;
+    font-weight: 600;
   }
   .total-box .balance-label {
     color: #1a1c1e;
     font-size: 0.8rem;
+    font-weight: 600;
   }
   .total-box .balance-amount {
     color: #1a1c1e;
     font-size: 0.8rem;
+    font-weight: 600;
   }
 }
 </style>
