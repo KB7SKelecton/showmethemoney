@@ -1,17 +1,17 @@
 <template>
   <nav class="side-nav">
     <div class="menu-group">
-      <router-link to="/" class="nav-item">
+      <router-link :to="{ name: 'home' }" class="nav-item">
         <i class="fas fa-calendar-alt icon"></i>
         <span>홈/달력</span>
       </router-link>
 
-      <router-link to="/list" class="nav-item">
+      <router-link :to="{ name: 'list' }" class="nav-item">
         <i class="fas fa-file-invoice-dollar icon"></i>
         <span>재정 내역</span>
       </router-link>
 
-      <router-link to="/mypage" class="nav-item">
+      <router-link :to="{ name: 'mypage' }" class="nav-item">
         <i class="fas fa-user-circle icon"></i>
         <span>마이페이지</span>
       </router-link>
@@ -120,7 +120,9 @@ function onAvatarChange(event) {
 <style scoped>
 .side-nav {
   width: 260px;
-  height: calc(100vh - 64px);
+  height: 100vh;
+  top: 64px; /* 헤더 높이만큼 아래서 시작 */
+
   background-color: #0d0d0d;
   border-right: 1px solid #222;
   display: flex;
@@ -151,7 +153,7 @@ function onAvatarChange(event) {
   position: relative;
 }
 
-.nav-item.router-link-active {
+.nav-item.router-link-exact-active {
   color: #fff;
   background: linear-gradient(
     90deg,
@@ -160,7 +162,7 @@ function onAvatarChange(event) {
   );
 }
 
-.nav-item.router-link-active::before {
+.nav-item.router-link-exact-active::before {
   content: "";
   position: absolute;
   left: 0;
@@ -172,12 +174,12 @@ function onAvatarChange(event) {
   z-index: 5;
 }
 
-.nav-item.router-link-active .icon {
+.nav-item.router-link-exact-active .icon {
   color: #ffb347;
   filter: drop-shadow(0 0 5px rgba(255, 179, 71, 0.3));
 }
 
-.nav-item.router-link-active span {
+.nav-item.router-link-exact-active span {
   color: #ffffff;
   font-weight: 700;
   letter-spacing: -0.02em;
@@ -318,7 +320,7 @@ function onAvatarChange(event) {
     font-size: 14px;
   }
 
-  .nav-item.router-link-active {
+  .nav-item.router-link-exact-active {
     background: linear-gradient(
       180deg,
       rgba(255, 179, 71, 0.18) 0%,
@@ -326,7 +328,7 @@ function onAvatarChange(event) {
     );
   }
 
-  .nav-item.router-link-active::before {
+  .nav-item.router-link-exact-active::before {
     top: 0;
     left: 50%;
     transform: translateX(-50%);

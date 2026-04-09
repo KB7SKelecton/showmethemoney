@@ -308,21 +308,25 @@ const changeMonth = (offset) => {
 
 /* 텍스트 크기 강화 */
 h3 {
-  font-size: 0.8rem;
+  font-size: 1.05rem;
   margin: 0;
-  font-weight: 500;
+  font-weight: 700;
   color: #fff;
+  letter-spacing: -0.02em;
 }
 .subtitle {
   color: #888;
   font-size: 0.7rem;
-  margin-top: 3px;
+  margin-top: 4px;
+  font-weight: 500;
 }
 .highlight {
-  color: #f8a70c;
-  font-size: 0.8rem;
-  font-weight: 300;
-  margin-top: 8px;
+  color: #888;
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-top: 4px;
 }
 
 /* 네비게이션 가독성 */
@@ -345,7 +349,7 @@ h3 {
 }
 .nav-date {
   font-weight: 500;
-  font-size: 0.7rem;
+  font-size: 0.88rem;
   color: #fff;
 }
 

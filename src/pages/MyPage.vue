@@ -19,77 +19,76 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
-import axios from 'axios';
-import Chart from '@/components/Chart.vue';
+import { ref, computed, onMounted } from "vue"; // computed 추가
+import { useRouter } from "vue-router";
+import axios from "axios";
+import Chart from "@/components/Chart.vue";
+import db from "../../db.json"; // db import 추가
+
 const router = useRouter();
 
-const balance = ref(0);
-
 const user = ref({
-  name: '',
-  email: '',
-  avatar: '',
+  name: "",
+  email: "",
+  avatar: "",
 });
 
-// 이름 수정 모드 여부 (true: input 표시, false: 텍스트 표시)
-const isEditingName = ref(false);
+const initialBalance = ref(0);
 
-// 이메일 수정 모드 여부 (true: input 표시, false: 텍스트 표시)
+// balance는 computed로 선언 (onMounted 밖에!)
+const balance = computed(() => {
+  const totalChange = db.transactions.reduce((acc, t) => {
+    return t.type === "INCOME" ? acc + t.amount : acc - t.amount;
+  }, 0);
+  return initialBalance.value + totalChange;
+});
+
+const isEditingName = ref(false);
 const isEditingEmail = ref(false);
 
-// 로그아웃: 홈으로 이동 (나중에 /login으로 변경 예정)
 function logout() {
-  router.push('/');
+  router.push("/");
 }
 
-// 이름 수정 시작: 텍스트 클릭 시 실행
 function startEdit() {
   isEditingName.value = true;
 }
 
-// 이름 수정 완료: Enter 또는 바깥 클릭 시 실행
 async function finishEdit() {
   isEditingName.value = false;
-  // 이름 수정 완료 시 db에 저장
-  await axios.patch('http://localhost:3000/users/1', {
+  await axios.patch("http://localhost:3000/users/1", {
     nickname: user.value.name,
   });
 }
 
-// 이메일 수정 시작: 텍스트 클릭 시 실행
 function startEditEmail() {
   isEditingEmail.value = true;
 }
 
-// 이메일 수정 완료: Enter 또는 바깥 클릭 시 실행
 async function finishEditEmail() {
   isEditingEmail.value = false;
-  // 이메일 수정 완료 시 db에 저장
-  await axios.patch('http://localhost:3000/users/1', {
+  await axios.patch("http://localhost:3000/users/1", {
     email: user.value.email,
   });
 }
 
+// onMounted는 한 번만!
 onMounted(async () => {
-  const res = await axios.get('http://localhost:3000/users/1');
+  const res = await axios.get("http://localhost:3000/users/1");
   user.value.name = res.data.nickname;
   user.value.email = res.data.email;
   user.value.avatar = res.data.profile_image_url;
-  balance.value = res.data.initial_balance;
+  initialBalance.value = res.data.initial_balance;
 });
 
-// 프로필 이미지 변경
-// FileReader로 선택한 이미지를 base64로 변환해서 user.avatar에 저장
 function onAvatarChange(event) {
   const file = event.target.files[0];
-  if (!file) return; // 파일 선택 안 했으면 종료
+  if (!file) return;
   const reader = new FileReader();
   reader.onload = (e) => {
-    user.value.avatar = e.target.result; // base64 이미지 저장
+    user.value.avatar = e.target.result;
   };
-  reader.readAsDataURL(file); // 파일을 base64로 변환 시작
+  reader.readAsDataURL(file);
 }
 </script>
 
@@ -101,13 +100,13 @@ function onAvatarChange(event) {
   min-height: 100vh;
   background-color: #131313;
   padding: 0;
-  font-family: 'Manrope', sans-serif;
+  font-family: "Manrope", sans-serif;
 }
 
 /* 왼쪽 메인 영역: 나머지 공간 전부 차지 */
 .mypage-main {
   flex: 1;
-  padding: 48px 40px;
+  padding: 40px 20px;
   width: 100%;
 }
 
@@ -120,11 +119,10 @@ function onAvatarChange(event) {
 /* 마이페이지 제목 */
 .mypage-title {
   font-size: 1.5rem;
-  font-weight: 400;
+  font-weight: 600;
   color: #e5e2e1;
-  margin: 0 0 20px 0;
-  letter-spacing: -0.03em;
   line-height: 1;
+  margin: -20px 0 12px;
 }
 
 /* 잔고 표시 박스 */
@@ -136,6 +134,7 @@ function onAvatarChange(event) {
   align-items: flex-start;
   gap: 1px;
   flex-direction: column; /* 세로로 쌓기 */
+  margin-top: 7px;
 }
 
 /* AVAILABLE ASSETS 라벨 */
@@ -286,7 +285,7 @@ function onAvatarChange(event) {
   padding: 6px 10px;
   width: 100%;
   outline: none;
-  font-family: 'Manrope', sans-serif;
+  font-family: "Manrope", sans-serif;
 }
 
 /* 이메일 수정 input */
@@ -301,7 +300,7 @@ function onAvatarChange(event) {
   width: 100%;
   outline: none;
   opacity: 0.7;
-  font-family: 'Manrope', sans-serif;
+  font-family: "Manrope", sans-serif;
 }
 
 /* 사이드바 아래쪽: 로그아웃 버튼 영역 */
@@ -325,7 +324,7 @@ function onAvatarChange(event) {
   cursor: pointer;
   font-size: 1rem;
   font-weight: 400;
-  font-family: 'Manrope', sans-serif;
+  font-family: "Manrope", sans-serif;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -369,8 +368,10 @@ function onAvatarChange(event) {
   }
 
   .mypage-title {
-    font-size: 1.8rem; /* 제목 크기를 살짝 조절 */
+    font-size: 1.5rem; /* 제목 크기를 살짝 조절 */
     margin-bottom: 15px;
+    font-weight: 600;
+    margin: -20px 0 12px;
   }
 
   .mypage-balance {
@@ -394,6 +395,7 @@ function onAvatarChange(event) {
     font-size: 1.4rem; /* 모바일: 제목 중앙 정렬 */
     margin-left: 10px;
     margin-top: -10px;
+    margin: -20px 0 12px;
   }
 
   .mypage-balance {

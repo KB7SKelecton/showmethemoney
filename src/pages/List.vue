@@ -4,6 +4,7 @@
     <div class="list-panel">
     <!-- 상단: 탭만 (카테고리 / 월 / 일) -->
     <header class="page-head">
+      <h1 class="page-title">내역</h1>
       <nav class="list-tabs" role="tablist" aria-label="내역 보기 방식">
         <button
           type="button"
@@ -149,12 +150,16 @@
               <label class="tx-modal-label" for="txm-amount">금액</label>
               <input
                 id="txm-amount"
-                v-model="detailForm.amount"
+                :value="detailForm.amount"
                 type="text"
                 inputmode="numeric"
                 autocomplete="off"
                 class="tx-modal-input"
+                lang="en"
                 required
+                @beforeinput="onDetailAmountBeforeInput"
+                @input="onDetailAmountInput"
+                @compositionend="onDetailAmountCompositionEnd"
               />
             </div>
 
@@ -243,6 +248,7 @@ import {
   watch,
   onMounted,
   onUnmounted,
+  nextTick,
 } from 'vue';
 import axios from 'axios';
 
@@ -287,11 +293,77 @@ const detailForm = reactive({
   memo: '',
 });
 
+/** 금액 표시용: 숫자만 남기고 천 단위 콤마 */
+function formatDetailAmountDigits(digits) {
+  if (!digits) return '';
+  const normalized = digits.replace(/^0+/, '') || '0';
+  return normalized.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+
+function countDigitsLeftOfCursor(str, cursorPos) {
+  return String(str).slice(0, cursorPos).replace(/\D/g, '').length;
+}
+
+function cursorPosAfterDigitCount(formatted, digitCount) {
+  if (digitCount <= 0) return 0;
+  let seen = 0;
+  for (let i = 0; i < formatted.length; i++) {
+    if (/\d/.test(formatted[i])) seen += 1;
+    if (seen >= digitCount) return i + 1;
+  }
+  return formatted.length;
+}
+
+/** 금액 필드: DOM 값 → 숫자만·콤마 포맷 + 커서(숫자 개수 기준) 유지 */
+function syncDetailAmountFromInputEl(input) {
+  const prev = detailForm.amount;
+  const caret = input.selectionStart ?? prev.length;
+  const digitsLeft = countDigitsLeftOfCursor(prev, caret);
+
+  const digitsOnly = String(input.value).replace(/\D/g, '');
+  const next =
+    digitsOnly === '' ? '' : formatDetailAmountDigits(digitsOnly);
+  detailForm.amount = next;
+
+  nextTick(() => {
+    const pos = cursorPosAfterDigitCount(next, digitsLeft);
+    input.setSelectionRange(pos, pos);
+  });
+}
+
+/** 숫자 외 문자·한글 IME 조합 입력 차단 (붙여넣기는 input에서 정리) */
+function onDetailAmountBeforeInput(e) {
+  const t = e.inputType;
+  if (
+    t !== 'insertText' &&
+    t !== 'insertCompositionText' &&
+    t !== 'insertReplacementText'
+  ) {
+    return;
+  }
+  const d = e.data;
+  if (d == null || d === '') return;
+  if (/[^\d]/.test(d)) {
+    e.preventDefault();
+  }
+}
+
+function onDetailAmountInput(e) {
+  syncDetailAmountFromInputEl(e.target);
+}
+
+function onDetailAmountCompositionEnd(e) {
+  syncDetailAmountFromInputEl(e.target);
+}
+
 function openDetail(tx) {
   editingId.value = tx.id;
   detailForm.type = tx.type === 'INCOME' ? 'INCOME' : 'EXPENSE';
-  detailForm.amount =
-    tx.amount != null && tx.amount !== '' ? String(tx.amount) : '';
+  const raw =
+    tx.amount != null && tx.amount !== ''
+      ? String(tx.amount).replace(/\D/g, '')
+      : '';
+  detailForm.amount = raw === '' ? '' : formatDetailAmountDigits(raw);
   detailForm.transaction_date = tx.transaction_date || '';
   detailForm.category_id =
     Number(tx.category_id) || categories.value[0]?.id || 1;
@@ -662,6 +734,13 @@ onMounted(() => {
   background: linear-gradient(180deg, rgba(255, 188, 0, 0.08) 0%, transparent 100%);
 }
 
+.page-title {
+  margin: -20px 0 12px;
+  color: #ffffff;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
 /* 탭 버튼 행 */
 .list-tabs {
   display: flex;
@@ -828,7 +907,7 @@ onMounted(() => {
 .tx-modal-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 2000;
+  z-index: 20000;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -838,8 +917,8 @@ onMounted(() => {
 }
 
 .tx-modal {
-  width: 100%;
-  max-width: 400px;
+  width: 90%;
+  max-width: 500px;
   max-height: min(90vh, 640px);
   overflow: auto;
   box-sizing: border-box;
