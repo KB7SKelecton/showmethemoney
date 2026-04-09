@@ -160,19 +160,15 @@ const centerTextPlugin = {
     ctx.save();
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-
-    // "총 지출액" - 색상을 더 밝게, 크기를 키움
-    ctx.fillStyle = '#bbbbbb';
-    ctx.font = '600 1.1rem "Pretendard", sans-serif';
-    ctx.fillText('총 지출액', width / 2, top + height / 2 - 22);
-
-    // 금액 숫자 - 화이트로 명확하게
+    ctx.fillStyle = '#aaaaaa';
+    ctx.font = '600 1.2rem sans-serif';
+    ctx.fillText('총 지출액', width / 2, top + height / 2 - 25);
     ctx.fillStyle = '#ffffff';
-    ctx.font = '700 2rem "Pretendard", sans-serif';
+    ctx.font = 'bold 2.2rem sans-serif'; // 금액 폰트 대폭 확대
     ctx.fillText(
       `${dashboardData.value.total.toLocaleString()}원`,
       width / 2,
-      top + height / 2 + 18,
+      top + height / 2 + 20,
     );
     ctx.restore();
   },
@@ -254,92 +250,167 @@ const changeMonth = (offset) => {
 </template>
 
 <style scoped>
+/* 전체 폰트 및 가독성 향상 스타일 */
 .dashboard-container {
   background-color: #000;
-  color: #ffffff; /* 기본 글자색을 완전 화이트로 */
-  padding: 40px;
-  font-family:
-    'Pretendard',
-    -apple-system,
-    BlinkMacSystemFont,
-    system-ui,
-    sans-serif;
-  line-height: 1.6; /* 행간을 넓혀 가독성 확보 */
+  color: #fff;
+  padding: 30px;
+  font-family: 'Pretendard', sans-serif;
 }
 
 .card {
-  background-color: #1a1a1a; /* 카드 배경을 약간 밝게 하여 대비 명확화 */
-  border-radius: 24px;
-  padding: 35px;
-  border: 1px solid #333;
-  margin-bottom: 30px;
+  background-color: #121212;
+  border-radius: 32px;
+  padding: 40px;
+  border: 1px solid #222;
+  margin-bottom: 25px;
 }
 
-/* 제목 및 텍스트 계층 구조 */
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 35px;
+}
+
+/* 텍스트 크기 강화 */
 h3 {
-  font-size: 1.5rem; /* 제목 크기 확대 */
+  font-size: 1.4rem;
+  margin: 0;
   font-weight: 800;
-  color: #ffffff;
-  letter-spacing: -0.03em;
+  color: #fff;
 }
-
 .subtitle {
-  color: #aaaaaa; /* 부제목도 조금 더 밝게 */
-  font-size: 1rem;
-  margin-top: 6px;
+  color: #888;
+  font-size: 0.8rem;
+  margin-top: 8px;
 }
-
 .highlight {
-  color: #ffb421; /* 골드 색상 채도를 높임 */
+  color: #f8a70c;
   font-size: 1.1rem;
   font-weight: 700;
+  margin-top: 8px;
 }
 
 /* 네비게이션 가독성 */
-.nav-date {
-  font-weight: 800;
-  font-size: 1.3rem; /* 날짜 크기 확대 */
-  color: #ffffff;
+.month-nav {
+  background: #1a1a1a;
+  padding: 12px 25px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  border: 1px solid #333;
 }
-
 .nav-btn {
-  font-size: 1.2rem;
-  color: #ffb421;
-  padding: 5px 10px;
+  background: none;
+  border: none;
+  color: #f8a70c;
+  cursor: pointer;
+  font-size: 1.3rem;
+  font-weight: bold;
 }
-
-/* 상세 리스트 가독성 (가장 중요한 부분) */
-.detail-list li {
-  padding: 22px 0;
-  border-bottom: 1px solid #2a2a2a;
-}
-
-.cat-name {
-  font-size: 1.2rem; /* 카테고리명 확대 */
-  font-weight: 600;
-  color: #f0f0f0;
-}
-
-.percent {
-  font-size: 1.4rem; /* 퍼센트 수치 강조 */
-  font-weight: 800;
-  color: #ffb421;
-  margin-right: 15px;
-}
-
-.amount {
-  font-size: 1.25rem; /* 금액 크기 확대 */
-  color: #ffffff;
+.nav-date {
   font-weight: 700;
-  min-width: 110px;
-  display: inline-block;
-  text-align: right;
+  font-size: 1.2rem;
+  color: #fff;
 }
 
-/* 로딩 상태 */
-.loading-state {
-  color: #ffffff;
+/* 차트 높이 고정 */
+.main-bar {
+  height: 350px;
+}
+.donut-box {
+  height: 320px;
+}
+.bottom-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 25px;
+}
+
+/* 상세 내역 리스트 가독성 (대폭 강화) */
+.detail-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 25px 0;
+  border-bottom: 1px solid #222;
+}
+.dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+}
+.cat-name {
+  font-size: 1.4rem;
   font-weight: 600;
-  font-size: 1.2rem;
+  color: #efefef;
+}
+.percent {
+  display: block;
+  font-size: 1.8rem;
+  font-weight: 900;
+  color: #fff;
+  margin-bottom: 4px;
+}
+.amount {
+  font-size: 1.1rem;
+  color: #999;
+  font-weight: 500;
+}
+
+.loading-state {
+  color: #f8a70c;
+  text-align: center;
+  padding: 100px;
+  font-size: 1.5rem;
+}
+
+/* Chart.vue <style scoped> 최하단에 추가 */
+/* 태블릿 및 작은 모니터 (1024px) */
+@media (max-width: 1024px) {
+  .bottom-grid {
+    grid-template-columns: 1fr; /* 2열에서 1열로 변경 (중요!) */
+    gap: 20px;
+  }
+
+  .card {
+    padding: 25px; /* 카드 내부 여백을 줄여 가독성 향상 */
+    border-radius: 20px;
+  }
+
+  .main-bar {
+    height: 300px; /* 차트 높이 최적화 */
+  }
+
+  .donut-box {
+    height: 280px;
+  }
+}
+
+@media (max-width: 768px) {
+  .bottom-grid {
+    grid-template-columns: 1fr; /* 도넛과 리스트를 세로로 배치 */
+    gap: 20px;
+  }
+
+  .chart-content {
+    height: 250px; /* 화면이 작아지면 차트 높이도 약간 축소 */
+  }
+
+  .card {
+    padding: 20px; /* 카드 내부 여백 조절 */
+  }
+}
+
+@media (max-width: 375px) {
+  .detail-list li {
+    padding: 14px 0; /* 리스트 간격 조절 */
+  }
+
+  .amount {
+    min-width: auto; /* 모바일에서 금액 너비 자동 조절 */
+  }
 }
 </style>
