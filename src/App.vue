@@ -25,33 +25,33 @@
   </div>
 </template>
 <script>
-import { useRoute, useRouter } from 'vue-router';
-import { ref, onMounted } from 'vue';
-import axios from 'axios';
-import Header from '@/components/Header.vue';
-import Nav from '@/components/Nav.vue';
+import { useRoute, useRouter } from "vue-router";
+import { ref, onMounted } from "vue";
+import axios from "axios";
+import Header from "@/components/Header.vue";
+import Nav from "@/components/Nav.vue";
 
 export default {
-  name: 'App',
+  name: "App",
   components: { Header, Nav },
   setup() {
     const route = useRoute();
     const router = useRouter();
 
-    const userName = ref('');
-    const userProfileImg = ref('');
+    const userName = ref("");
+    const userProfileImg = ref("");
 
     onMounted(async () => {
-      const res = await axios.get('http://localhost:3000/users/1');
+      const res = await axios.get("http://localhost:3000/users/1");
       userName.value = res.data.nickname;
       userProfileImg.value = res.data.profile_image_url;
     });
     const handleLogout = () => {
-      localStorage.removeItem('user');
-      router.push('/login');
+      localStorage.removeItem("user");
+      router.push("/login");
     };
     const handleAddClick = () => {
-      alert('내역 추가 창을 띄울 예정입니다!');
+      alert("내역 추가 창을 띄울 예정입니다!");
     };
 
     return {
@@ -83,14 +83,6 @@ body {
   float: right;
 }
 
-/* 스마트폰 화면 (768px 미만) */
-@media (max-width: 767px) {
-  .main-content {
-    width: 100%;
-    float: none;
-    padding-bottom: 96px; /* 하단 네비 + FAB 영역 확보 */
-  }
-}
 .fab-button {
   position: fixed; /* 화면에 고정 */
   bottom: 30px; /* 맨 아래에서 30px 띄움 */
