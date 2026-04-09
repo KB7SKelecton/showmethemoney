@@ -10,52 +10,42 @@
     <main class="main-content">
       <router-view></router-view>
     </main>
-    <!-- 마이페이지 빼고 + 버튼 생성 -->
-    <button
-      v-if="
-        route.path !== '/mypage' &&
-        route.path !== '/login' &&
-        route.path !== '/register'
-      "
-      class="fab-button"
-      @click="handleAddClick"
-    >
-      +
-    </button>
+    <Register />
   </div>
 </template>
+
 <script>
-import { useRoute, useRouter } from "vue-router";
-import { ref, onMounted } from "vue";
-import axios from "axios";
-import Header from "@/components/Header.vue";
-import Nav from "@/components/Nav.vue";
+import { useRoute, useRouter } from 'vue-router';
+import { ref, onMounted } from 'vue';
+import axios from 'axios';
+import Header from '@/components/Header.vue';
+import Nav from '@/components/Nav.vue';
+import Register from './components/Register.vue';
 
 export default {
-  name: "App",
-  components: { Header, Nav },
+  name: 'App',
+  components: { Header, Nav, Register },
   setup() {
     const route = useRoute();
     const router = useRouter();
 
-    const userName = ref("");
-    const userProfileImg = ref("");
+    const userName = ref('');
+    const userProfileImg = ref('');
 
     onMounted(async () => {
-      const res = await axios.get("http://localhost:3000/users/1");
+      const res = await axios.get('http://localhost:3000/users/1');
       userName.value = res.data.nickname;
       userProfileImg.value = res.data.profile_image_url;
     });
     const handleLogout = () => {
-      localStorage.removeItem("user");
-      router.push("/login");
+      localStorage.removeItem('user');
+      router.push('/login');
     };
     const handleAddClick = () => {
-      alert("내역 추가 창을 띄울 예정입니다!");
+      alert('내역 추가 창을 띄울 예정입니다!');
     };
 
     return {
-      handleAddClick,
       route,
       handleLogout,
       userName,
@@ -67,17 +57,10 @@ export default {
 </script>
 
 <style>
-body {
-  margin: 0;
-  background-color: #131313;
-}
-
 .app-layout {
   min-height: 100vh;
 }
-
 .main-content {
-  padding: 0;
   background-color: #131313;
   width: calc(100% - 260px);
   float: right;
@@ -115,15 +98,12 @@ body {
   transform: scale(0.9); /* 살짝 작아짐 */
 }
 
-/* 모바일 전용 여백 조절 (메뉴바와 겹치지 않게) */
 @media (max-width: 767px) {
   .main-content {
     width: 100%;
     float: none;
     padding-bottom: 96px;
   }
-
-  /* 모바일에서는 메뉴바(60px) 위로 버튼을 조금 더 올림 */
   .fab-button {
     right: 16px;
     bottom: 88px;
@@ -131,16 +111,5 @@ body {
     height: 52px;
     font-size: 26px;
   }
-}
-* {
-  box-sizing: border-box;
-}
-
-html,
-body,
-#app {
-  background-color: #131313 !important;
-  margin: 0;
-  padding: 0;
 }
 </style>
