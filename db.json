@@ -402,6 +402,15 @@
       "amount": 15000,
       "transaction_date": "2026-05-09",
       "memo": "민원 관련 발급 비용"
+    },
+    {
+      "user_id": 1,
+      "category_id": 7,
+      "type": "EXPENSE",
+      "amount": 242424,
+      "transaction_date": "2026-04-09",
+      "memo": "테스트임",
+      "id": 41
     }
   ]
 }
