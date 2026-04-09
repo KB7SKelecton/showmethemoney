@@ -584,6 +584,7 @@ const totalBalance = computed(() => {
   gap: 2px;
 }
 
+/* 상세내역 카테고리 */
 .t-cat {
   font-size: 0.65rem;
   font-weight: 600;
@@ -708,6 +709,7 @@ const totalBalance = computed(() => {
   flex-shrink: 0;
 }
 
+/* 월 통계창 박스 */
 .balance-label {
   font-size: 1.4rem;
   color: #f8a70c;
