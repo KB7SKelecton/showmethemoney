@@ -137,7 +137,7 @@ const barOptions = {
         color: '#ffffff',
         usePointStyle: true,
         boxWidth: 8,
-        font: { size: 14, weight: '600' },
+        font: { size: 10, weight: '400' },
       },
     },
   },
@@ -254,7 +254,8 @@ const changeMonth = (offset) => {
 .dashboard-container {
   background-color: #000;
   color: #fff;
-  padding: 30px;
+  padding: 2px 0px;
+  margin: 10px 0px;
   font-family: 'Pretendard', sans-serif;
 }
 
@@ -270,7 +271,7 @@ const changeMonth = (offset) => {
 .card {
   background-color: #121212;
   border-radius: 32px;
-  padding: 40px;
+  padding: 20px;
   border: 1px solid #222;
   margin-bottom: 25px;
 }
@@ -284,20 +285,20 @@ const changeMonth = (offset) => {
 
 /* 텍스트 크기 강화 */
 h3 {
-  font-size: 1.4rem;
+  font-size: 0.8rem;
   margin: 0;
-  font-weight: 800;
+  font-weight: 500;
   color: #fff;
 }
 .subtitle {
   color: #888;
-  font-size: 0.8rem;
-  margin-top: 8px;
+  font-size: 0.7rem;
+  margin-top: 3px;
 }
 .highlight {
   color: #f8a70c;
-  font-size: 1.1rem;
-  font-weight: 700;
+  font-size: 0.8rem;
+  font-weight: 300;
   margin-top: 8px;
 }
 
@@ -308,7 +309,7 @@ h3 {
   border-radius: 16px;
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 10px;
   border: 1px solid #333;
 }
 .nav-btn {
@@ -316,12 +317,12 @@ h3 {
   border: none;
   color: #f8a70c;
   cursor: pointer;
-  font-size: 1.3rem;
+  font-size: 1rem;
   font-weight: bold;
 }
 .nav-date {
-  font-weight: 700;
-  font-size: 1.2rem;
+  font-weight: 500;
+  font-size: 0.7rem;
   color: #fff;
 }
 
@@ -352,19 +353,19 @@ h3 {
   border-radius: 50%;
 }
 .cat-name {
-  font-size: 1.4rem;
+  font-size: 1.1rem;
   font-weight: 600;
   color: #efefef;
 }
 .percent {
   display: block;
-  font-size: 1.8rem;
-  font-weight: 900;
+  font-size: 0.9rem;
+  font-weight: 400;
   color: #fff;
   margin-bottom: 4px;
 }
 .amount {
-  font-size: 1.1rem;
+  font-size: 0.9rem;
   color: #999;
   font-weight: 500;
 }
