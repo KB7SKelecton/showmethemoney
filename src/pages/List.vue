@@ -907,7 +907,7 @@ onMounted(() => {
 .tx-modal-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 2000;
+  z-index: 20000;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -917,8 +917,8 @@ onMounted(() => {
 }
 
 .tx-modal {
-  width: 100%;
-  max-width: 400px;
+  width: 90%;
+  max-width: 500px;
   max-height: min(90vh, 640px);
   overflow: auto;
   box-sizing: border-box;
