@@ -1,20 +1,21 @@
 <template>
-  <!-- 상단 네비게이션 및 유저 정보 -->
+  <!-- 상단 및 유저 정보 -->
   <div class="main-layout">
     <nav class="header-bar">
       <div class="logo">홈/달력</div>
     </nav>
 
-    <!-- 달력 컨트롤러 -->
+    <!-- 달력 및 잔고창 컨트롤러 -->
     <div class="content-wrapper">
       <main class="calendar-container">
-        <!-- 잔고, 수입, 지출창 -->
+        <!-- 잔고창( 월 수입 자출 통계 포함 ) -->
         <div class="mypage-balance">
           <span class="balance-label"></span>
           <span class="balance-amount"
             >잔고 : {{ totalBalance.toLocaleString() }}원</span
           >
 
+          <!-- 월 수입창 -->
           <section class="summary-container">
             <div class="mypage-balance income-box">
               <span class="balance-label">월 수입</span>
@@ -23,6 +24,7 @@
               </span>
             </div>
 
+            <!-- 월 지출창 -->
             <div class="mypage-balance expense-box">
               <span class="balance-label">월 지출</span>
               <span class="balance-amount">
@@ -30,6 +32,7 @@
               </span>
             </div>
 
+            <!-- 월 통계창 -->
             <div class="mypage-balance total-box">
               <span class="balance-label">월 통계</span>
               <span class="balance-amount">
@@ -40,15 +43,17 @@
               </span>
             </div>
           </section>
-
-          <!-- 잔고창 끝 달력의 시작 -->
         </div>
+
+        <!-- 잔고창 끝 달력의 시작 -->
         <header class="calendar-control">
+          <!-- 현재 달 및 버튼 2개 -->
           <button @click="changeMonth(-1)" class="nav-btn">◀</button>
           <h2 class="current-month">
             {{ currentYear }}년 {{ currentMonth + 1 }}월
           </h2>
           <button @click="changeMonth(1)" class="nav-btn">▶</button>
+          <!-- 오늘 버튼 -->
           <button @click="goToday" class="today-btn">오늘</button>
         </header>
 
@@ -58,6 +63,7 @@
             {{ day }}
           </div>
 
+          <!-- 달력 상세 날짜 및 클릭 시 상세내역 확인 -->
           <div
             v-for="(date, index) in calendarDates"
             :key="index"
@@ -69,8 +75,10 @@
             }"
             @click="date.isCurrentMonth && showDetails(date)"
           >
+            <!-- 오늘 날짜 노란색 바 -->
             <span class="date-num">{{ date.day }}</span>
 
+            <!-- 날짜별 달력에 수입 지출 숫자 확인 -->
             <div
               v-if="date.isCurrentMonth && date.totalIncome"
               class="cell-income"
@@ -93,6 +101,7 @@
         <div v-if="selectedDate" class="detail-content">
           <p class="detail-date">{{ selectedDate.dateString }}</p>
 
+          <!-- 특정 날짜 상세 내역 등장 -->
           <div class="transaction-list">
             <div
               v-for="t in selectedDate.transactions"
@@ -108,6 +117,7 @@
                 }}{{ t.amount.toLocaleString() }}
               </div>
             </div>
+            <!-- 특정 날짜 거래 X 시 문구 등장 -->
             <div
               v-if="selectedDate.transactions.length === 0"
               class="empty-msg"
@@ -116,6 +126,7 @@
             </div>
           </div>
 
+          <!-- 맨 밑 박스 총수입 총지출 표기 -->
           <div class="detail-footer" v-if="selectedDate.transactions.length">
             <div class="footer-row">
               <span>총 수입</span
@@ -131,6 +142,7 @@
             </div>
           </div>
         </div>
+        <!-- 첫 화면엔 날짜 선택하라함 -->
         <div v-else class="empty-msg">날짜를 선택해 주세요.</div>
       </aside>
     </div>
@@ -316,16 +328,16 @@ const totalBalance = computed(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 1.5rem;
+  padding: 0 1.4rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   z-index: 10;
 }
 
 .logo {
-  font-size: 1.25rem;
+  font-size: 1.4rem;
   font-weight: 900;
-  color: #f8a70c;
-  font-style: italic;
+  color: #e5e2e1;
+  /* font-style: italic; */
   letter-spacing: -0.05em;
 }
 
@@ -370,12 +382,13 @@ const totalBalance = computed(() => {
   justify-content: flex-start; /* 왼쪽 정렬로 변경하여 세련미 강조 */
   align-items: center;
   gap: 8px;
+  margin-top: 16px;
   margin-bottom: 16px;
 }
 
 .current-month {
-  font-size: 1.2rem;
-  font-weight: 800;
+  font-size: 1.4rem;
+  font-weight: 600;
   color: #e5e2e1;
   letter-spacing: -0.02em;
 }
@@ -399,10 +412,10 @@ const totalBalance = computed(() => {
   margin-left: auto;
   padding: 6px 16px;
   background: #2a2a2a;
-  color: #d7c3ad;
+  color: #e5e2e1;
   border-radius: 8px;
-  font-size: 0.75rem;
-  font-weight: 700;
+  font-size: 0.8rem;
+  font-weight: 600;
   border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
@@ -432,10 +445,10 @@ const totalBalance = computed(() => {
 .day-label {
   padding: 16px 0;
   text-align: center;
-  font-size: 1rem;
-  font-weight: 800;
+  font-size: 1.2rem;
+  font-weight: 600;
   background: #1c1b1b;
-  color: rgba(229, 226, 225, 0.5);
+  color: #e5e2e1;
 }
 
 .day-label:first-child {
@@ -470,8 +483,8 @@ const totalBalance = computed(() => {
 
 /* 날짜 숫자 */
 .date-num {
-  font-size: 1.1rem;
-  font-weight: 500;
+  font-size: 1.2rem;
+  font-weight: 600;
   color: #f8a70c;
 }
 
@@ -481,7 +494,7 @@ const totalBalance = computed(() => {
   color: #131313;
   padding: 2px 8px;
   border-radius: 6px;
-  font-weight: 800;
+  font-weight: 600;
 }
 
 .not-current {
@@ -491,7 +504,7 @@ const totalBalance = computed(() => {
 /* 수입/지출 태그 */
 .cell-income {
   font-size: 1rem;
-  font-weight: 700;
+  font-weight: 600;
   color: #81c784; /* 부드러운 초록 */
   background: rgba(129, 199, 132, 0.1);
   padding: 2px 6px;
@@ -501,7 +514,7 @@ const totalBalance = computed(() => {
 
 .cell-expense {
   font-size: 16px;
-  font-weight: 700;
+  font-weight: 600;
   color: #ffb4ab; /* 부드러운 레드 */
   background: rgba(255, 180, 171, 0.1);
   padding: 2px 6px;
@@ -521,8 +534,8 @@ const totalBalance = computed(() => {
 
 .side-bar h3 {
   font-size: 1.25rem;
-  font-weight: 800;
-  color: #f8a70c;
+  font-weight: 600;
+  color: #e5e2e1;
   margin-bottom: 24px;
 }
 
@@ -558,20 +571,20 @@ const totalBalance = computed(() => {
 
 .t-cat {
   font-size: 0.65rem;
-  font-weight: 800;
+  font-weight: 600;
   color: #f8a70c;
   text-transform: uppercase;
 }
 
 .t-memo {
   font-size: 0.95rem;
-  font-weight: 500;
+  font-weight: 600;
   color: #e5e2e1;
 }
 
 .t-amount {
   font-size: 1rem;
-  font-weight: 800;
+  font-weight: 600;
 }
 
 .t-amount.income {
@@ -598,15 +611,15 @@ const totalBalance = computed(() => {
 }
 
 .footer-row span:first-child {
-  color: rgba(229, 226, 225, 0.5);
+  color: #e5e2e1;
 }
 .footer-row .income {
   color: #81c784;
-  font-weight: 700;
+  font-weight: 600;
 }
 .footer-row .expense {
   color: #ffb4ab;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 /* Floating Action Button */
@@ -636,10 +649,10 @@ const totalBalance = computed(() => {
 }
 
 .empty-msg {
-  color: rgba(229, 226, 225, 0.2);
+  color: #e5e2e1;
   text-align: center;
   margin-top: 60px;
-  font-size: 0.875rem;
+  font-size: 1.4rem;
   line-height: 1.6;
 }
 .mypage-balance {
@@ -670,7 +683,7 @@ const totalBalance = computed(() => {
 }
 
 .balance-label {
-  font-size: 1.5rem;
+  font-size: 1.4rem;
   color: #f8a70c;
   letter-spacing: 0.15em;
   text-transform: uppercase;
@@ -678,8 +691,8 @@ const totalBalance = computed(() => {
 }
 
 .balance-amount {
-  font-size: 1.1rem;
-  font-weight: 700;
+  font-size: 1.4rem;
+  font-weight: 600;
   color: #e5e2e1;
   white-space: nowrap; /* 줄바꿈 금지 */
   overflow: hidden; /* 넘치는 부분 숨김 */
@@ -708,7 +721,7 @@ const totalBalance = computed(() => {
 }
 
 .balance-label {
-  font-size: 1.2rem;
+  font-size: 0.8rem;
   color: #f8a70c; /* 기본 노란색 */
   letter-spacing: 0.15em;
   text-transform: uppercase;
@@ -717,29 +730,33 @@ const totalBalance = computed(() => {
 
 .balance-amount {
   font-size: 1rem;
-  font-weight: 700;
+  font-weight: 600;
   color: #e5e2e1;
   white-space: nowrap;
 }
 
 /* 수입 강조 (초록빛/파란빛) */
 .income-box .balance-label {
-  color: #84d4ff;
-  font-size: 10px;
+  color: #81c784;
+  font-size: 1rem;
+  font-weight: 600;
 }
 .income-box .balance-amount {
-  color: #84d4ff;
-  font-size: 10px;
+  color: #81c784;
+  font-size: 1rem;
+  font-weight: 600;
 }
 
 /* 지출 강조 (노란색/주황색) */
 .expense-box .balance-label {
-  color: #ffee03;
-  font-size: 0.6rem;
+  color: #ffb4ab;
+  font-size: 1rem;
+  font-weight: 600;
 }
 .expense-box .balance-amount {
-  color: #ffee03;
-  font-size: 0.6rem;
+  color: #ffb4ab;
+  font-size: 1rem;
+  font-weight: 600;
 }
 
 /* 통합창 강조 (이미지처럼 배경색 반전 효과 가능) */
@@ -748,11 +765,13 @@ const totalBalance = computed(() => {
 }
 .total-box .balance-label {
   color: #1a1c1e;
-  font-size: 0.6rem;
+  font-size: 1rem;
+  font-weight: 600;
 }
 .total-box .balance-amount {
   color: #1a1c1e;
-  font-size: 0.6rem;
+  font-size: 1rem;
+  font-weight: 600;
 }
 
 /* 반응형 웹 767px 기준 */
@@ -786,6 +805,12 @@ const totalBalance = computed(() => {
     width: 100%;
   }
 
+  .date-num {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #f8a70c;
+  }
+
   .date-cell {
     min-height: 70px; /* 세로로 길어지므로 셀 높이를 적당히 줄임 */
   }
@@ -793,7 +818,7 @@ const totalBalance = computed(() => {
   /* 5. 요일(일~토) 라벨 크기 축소 */
   .day-label {
     padding: 10px 0;
-    font-size: 0.75rem; /* 글자 크기를 줄여서 칸이 안 깨지게 함 */
+    font-size: 0.8rem; /* 글자 크기를 줄여서 칸이 안 깨지게 함 */
   }
 
   /* 5. 금액 폰트 미세 조정 */
@@ -801,6 +826,36 @@ const totalBalance = computed(() => {
   .cell-expense {
     font-size: 0.35rem;
     letter-spacing: -0.5px;
+  }
+  .income-box .balance-label {
+    color: #81c784;
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+  .income-box .balance-amount {
+    color: #81c784;
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+  .expense-box .balance-label {
+    color: #ffb4ab;
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+  .expense-box .balance-amount {
+    color: #ffb4ab;
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+  .total-box .balance-label {
+    color: #1a1c1e;
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+  .total-box .balance-amount {
+    color: #1a1c1e;
+    font-size: 0.8rem;
+    font-weight: 600;
   }
 }
 </style>
