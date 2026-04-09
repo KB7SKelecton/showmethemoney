@@ -2,8 +2,16 @@
   <header class="header">
     <!-- 로고 & 타이틀 -->
     <div class="header-left">
-      <img alt="Logo" class="header-logo" src="../../public/logoHeader.png" />
-      <h1 class="header-title">Show Me The Money</h1>
+      <img
+        alt="Logo"
+        class="header-logo"
+        src="../../public/logoHeader.png"
+        @click="goHome"
+        style="cursor: pointer"
+      />
+      <h1 class="header-title" @click="goHome" style="cursor: pointer">
+        Show Me The Money
+      </h1>
     </div>
 
     <!-- 유저 정보 & 로그아웃 -->
@@ -21,19 +29,23 @@
 </template>
 
 <script setup>
+import { useRouter } from "vue-router";
+
 defineProps({
   userName: {
     type: String,
-    default: '김금융',
+    default: "김금융",
   },
   userProfileImg: {
     type: String,
-    default: 'https://api.dicebear.com/7.x/thumbs/svg?seed=금융',
+    default: "https://api.dicebear.com/7.x/thumbs/svg?seed=금융",
   },
 });
+const router = useRouter();
+const goHome = () => router.push("/");
 
-const emit = defineEmits(['logout']);
-const handleLogout = () => emit('logout');
+const emit = defineEmits(["logout"]);
+const handleLogout = () => emit("logout");
 </script>
 
 <style scoped>
@@ -135,14 +147,17 @@ const handleLogout = () => emit('logout');
   }
 
   .user-info {
-    padding: 6px; /* 이름 없으니 패딩 줄임 */
+    padding: 0px; /* 이름 없으니 패딩 줄임 */
   }
 
   .logout-text {
     display: none; /* 로그아웃 텍스트 숨김 */
   }
   .header-logo {
-    height: 28px; /* 로고 크기 작게 40px → 28px */
+    height: 22px; /* 로고 크기 작게 40px → 28px */
+  }
+  .material-symbols-outlined {
+    font-size: 20px; /* 아이콘 크기 줄임 */
   }
 }
 </style>
