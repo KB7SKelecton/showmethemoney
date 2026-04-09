@@ -108,18 +108,18 @@ function onAvatarChange(event) {
 .mypage-main {
   flex: 1;
   padding: 48px 40px;
+  width: 100%;
 }
 
 /* 마이페이지 헤더 박스 */
 .mypage-header {
   background-color: #131313;
   padding: 0;
-  space-y: 16px;
 }
 
 /* 마이페이지 제목 */
 .mypage-title {
-  font-size: 2rem;
+  font-size: 1.5rem;
   font-weight: 400;
   color: #e5e2e1;
   margin: 0 0 20px 0;
@@ -140,7 +140,7 @@ function onAvatarChange(event) {
 
 /* AVAILABLE ASSETS 라벨 */
 .balance-label {
-  font-size: 0.7rem;
+  font-size: 0.6rem;
   color: #f8a70c;
   letter-spacing: 0.15em;
   text-transform: uppercase;
@@ -149,7 +149,7 @@ function onAvatarChange(event) {
 
 /* 잔고 금액 */
 .balance-amount {
-  font-size: 1.6rem;
+  font-size: 1.2rem;
   font-weight: 700;
   color: #e5e2e1;
 }
@@ -390,7 +390,10 @@ function onAvatarChange(event) {
   }
 
   .mypage-title {
-    text-align: center; /* 모바일: 제목 중앙 정렬 */
+    text-align: start;
+    font-size: 1.4rem; /* 모바일: 제목 중앙 정렬 */
+    margin-left: 10px;
+    margin-top: -10px;
   }
 
   .mypage-balance {
