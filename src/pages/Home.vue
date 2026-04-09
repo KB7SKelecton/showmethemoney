@@ -1,20 +1,21 @@
 <template>
-  <!-- 상단 네비게이션 및 유저 정보 -->
+  <!-- 상단 및 유저 정보 -->
   <div class="main-layout">
     <nav class="header-bar">
       <div class="logo">홈/달력</div>
     </nav>
 
-    <!-- 달력 컨트롤러 -->
+    <!-- 달력 및 잔고창 컨트롤러 -->
     <div class="content-wrapper">
       <main class="calendar-container">
-        <!-- 잔고, 수입, 지출창 -->
+        <!-- 잔고창( 월 수입 자출 통계 포함 ) -->
         <div class="mypage-balance">
           <span class="balance-label"></span>
           <span class="balance-amount"
             >잔고 : {{ totalBalance.toLocaleString() }}원</span
           >
 
+          <!-- 월 수입창 -->
           <section class="summary-container">
             <div class="mypage-balance income-box">
               <span class="balance-label">월 수입</span>
@@ -23,6 +24,7 @@
               </span>
             </div>
 
+            <!-- 월 지출창 -->
             <div class="mypage-balance expense-box">
               <span class="balance-label">월 지출</span>
               <span class="balance-amount">
@@ -30,6 +32,7 @@
               </span>
             </div>
 
+            <!-- 월 통계창 -->
             <div class="mypage-balance total-box">
               <span class="balance-label">월 통계</span>
               <span class="balance-amount">
@@ -40,15 +43,17 @@
               </span>
             </div>
           </section>
-
-          <!-- 잔고창 끝 달력의 시작 -->
         </div>
+
+        <!-- 잔고창 끝 달력의 시작 -->
         <header class="calendar-control">
+          <!-- 현재 달 및 버튼 2개 -->
           <button @click="changeMonth(-1)" class="nav-btn">◀</button>
           <h2 class="current-month">
             {{ currentYear }}년 {{ currentMonth + 1 }}월
           </h2>
           <button @click="changeMonth(1)" class="nav-btn">▶</button>
+          <!-- 오늘 버튼 -->
           <button @click="goToday" class="today-btn">오늘</button>
         </header>
 
@@ -58,6 +63,7 @@
             {{ day }}
           </div>
 
+          <!-- 달력 상세 날짜 및 클릭 시 상세내역 확인 -->
           <div
             v-for="(date, index) in calendarDates"
             :key="index"
@@ -69,8 +75,10 @@
             }"
             @click="date.isCurrentMonth && showDetails(date)"
           >
+            <!-- 오늘 날짜 노란색 바 -->
             <span class="date-num">{{ date.day }}</span>
 
+            <!-- 날짜별 달력에 수입 지출 숫자 확인 -->
             <div
               v-if="date.isCurrentMonth && date.totalIncome"
               class="cell-income"
@@ -93,6 +101,7 @@
         <div v-if="selectedDate" class="detail-content">
           <p class="detail-date">{{ selectedDate.dateString }}</p>
 
+          <!-- 특정 날짜 상네 내역 등장 -->
           <div class="transaction-list">
             <div
               v-for="t in selectedDate.transactions"
@@ -637,10 +646,10 @@ const totalBalance = computed(() => {
 }
 
 .empty-msg {
-  color: rgba(229, 226, 225, 0.2);
+  color: #e5e2e1;
   text-align: center;
   margin-top: 60px;
-  font-size: 0.8rem;
+  font-size: 1.4rem;
   line-height: 1.6;
 }
 .mypage-balance {
