@@ -142,7 +142,10 @@ const handleLogout = () => emit("logout");
     display: none; /* 로그아웃 텍스트 숨김 */
   }
   .header-logo {
-    height: 28px; /* 로고 크기 작게 40px → 28px */
+    height: 22px; /* 로고 크기 작게 40px → 28px */
+  }
+  .material-symbols-outlined {
+    font-size: 20px; /* 아이콘 크기 줄임 */
   }
 }
 </style>
