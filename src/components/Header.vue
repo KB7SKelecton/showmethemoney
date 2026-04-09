@@ -135,7 +135,7 @@ const handleLogout = () => emit("logout");
   }
 
   .user-info {
-    padding: 6px; /* 이름 없으니 패딩 줄임 */
+    padding: 0px; /* 이름 없으니 패딩 줄임 */
   }
 
   .logout-text {
