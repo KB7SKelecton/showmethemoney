@@ -59,7 +59,15 @@
 
         <!-- 달력 그리드 -->
         <div class="calendar-grid">
-          <div v-for="day in weekDays" :key="day" class="day-label">
+          <div
+            v-for="(day, index) in weekDays"
+            :key="index"
+            class="day-label"
+            :class="{
+              sun: index === 0, // 0번째(일)에 sun 클래스 추가
+              sat: index === 6, // 6번째(토)에 sat 클래스 추가
+            }"
+          >
             {{ day }}
           </div>
 
@@ -71,6 +79,8 @@
             :class="{
               'not-current': !date.isCurrentMonth,
               'is-today': date.isToday,
+              'is-saturday': new Date(date.dateString).getDay() === 6, // 토요일 조건 추가
+              'is-sunday': new Date(date.dateString).getDay() === 0, // (선택) 일요일 조건 추가
               selected: selectedDate?.dateString === date.dateString,
             }"
             @click="date.isCurrentMonth && showDetails(date)"
@@ -124,6 +134,7 @@
             >
               내역이 없습니다.
             </div>
+            <div id="detail-section" class="transaction-detail"></div>
           </div>
 
           <!-- 맨 밑 박스 총수입 총지출 표기 -->
@@ -252,6 +263,20 @@ const goToday = () => {
 // 특정 날짜 클릭 시 해당 날짜의 객체를 selectedDate에 할당(오른쪽 사이드바)
 const showDetails = (date) => {
   selectedDate.value = date;
+
+  // 반응형(모바일)일 때만 하단으로 스크롤 이동
+  // 브라우저 너비가 767px 이하인지 체크
+  if (window.innerWidth <= 1024) {
+    setTimeout(() => {
+      const element = document.getElementById('detail-section');
+      if (element) {
+        element.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start', // 요소의 시작 부분이 화면 상단에 오도록
+        });
+      }
+    }, 100);
+  }
 };
 const balance = ref(0);
 
@@ -340,7 +365,7 @@ const totalBalance = computed(() => {
 
 /* 홈/달력 글자 */
 .logo {
-  font-size: 1.4rem;
+  font-size: 1.5rem;
   font-weight: 900;
   color: #e5e2e1;
   /* font-style: italic; */
@@ -461,11 +486,31 @@ const totalBalance = computed(() => {
   color: #e5e2e1;
 }
 
+/* 일요일 스타일 */
+.day-label.sun {
+  color: #ff5f5f; /* 빨간색 */
+}
+
+/* 토요일 스타일 */
+.day-label.sat {
+  color: #5fafff; /* 파란색 */
+}
+
+/* 토요일 글자색 */
+.date-cell.is-saturday .date-num {
+  color: #3182ce; /* 부드러운 파란색 */
+}
+
+/* (선택) 일요일 글자색 - 보통 빨간색으로 많이 하니까요! */
+.date-cell.is-sunday .date-num {
+  color: #e53e3e; /* 부드러운 빨간색 */
+}
+
 .day-label:first-child {
-  color: #ffb4ab;
+  color: #ff5f5f;
 } /* 일요일 */
 .day-label:last-child {
-  color: #ffd483;
+  color: #0019fd;
 } /* 토요일 */
 
 /* 개별 날짜 칸 스타일 */
@@ -479,7 +524,6 @@ const totalBalance = computed(() => {
   flex-direction: column;
   gap: 2px;
 }
-
 .date-cell:hover {
   background: #1c1b1b;
 }
@@ -884,6 +928,25 @@ const totalBalance = computed(() => {
     color: #1a1c1e;
     font-size: 0.8rem;
     font-weight: 600;
+  }
+  .current-month {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #e5e2e1;
+  }
+  .nav-btn {
+    background: #2a2a2a;
+    color: #e5e2e1;
+    border: none;
+    border-radius: 8px;
+    width: 32px;
+    height: 32px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .nav-btn:hover {
+    background: #353534;
   }
 }
 </style>
