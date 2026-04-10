@@ -1,8 +1,17 @@
 <template>
+  <!--
+    내역 화면 전체 흐름:
+    1) activeTab으로 보기 방식 전환 → panelGroups(계산 속성)가 바뀌며 같은 템플릿으로 그룹+거래 목록 렌더
+    2) 로딩/에러/사용자 없음/빈 목록은 상단 분기로 메시지 표시
+    3) 거래 행 클릭 → openDetail → Teleport 모달에서 수정·삭제 후 loadData로 목록 갱신
+  -->
   <div class="list-screen">
-    <!-- 안쪽 카드: 모서리·내부 패딩 -->
+    <!-- 안쪽 카드: 모서리·내부 패딩 (스타일 변수·다크 패널) -->
     <div class="list-panel">
-    <!-- 상단: 탭만 (카테고리 / 월 / 일) -->
+    <!--
+      탭: role="tablist"로 접근성 부여.
+      클릭 시 activeTab만 바꿈 → Vue가 categoryGroups / monthGroups / dayGroups 중 해당 computed를 panelGroups에 연결.
+    -->
     <header class="page-head">
       <h1 class="page-title">내역</h1>
       <nav class="list-tabs" role="tablist" aria-label="내역 보기 방식">
@@ -39,7 +48,10 @@
       </nav>
     </header>
 
-    <!-- 로딩 / API 오류 / 사용자 없음 / 데이터 없음 -->
+    <!--
+      상태 분기(위에서 아래 순서로 하나만 표시):
+      loading → API 요청 중 / error → 네트워크·서버 오류 / activeUserId 없음 → users 비어 있음 / panelGroups 비어 있음 → 거래 없음
+    -->
     <div v-if="loading" class="state-msg">불러오는 중…</div>
     <div v-else-if="error" class="state-msg state-err">{{ error }}</div>
     <p v-else-if="activeUserId == null" class="state-msg state-err">
@@ -47,7 +59,10 @@
     </p>
     <p v-else-if="!panelGroups.length" class="state-msg">표시할 내역이 없습니다.</p>
 
-    <!-- 탭에 맞춰 panelGroups로 통일된 그룹 헤더 + 거래 행 리스트 -->
+    <!--
+      정상 데이터: panelGroups는 탭마다 다른 그룹핑 결과를 동일한 shape(title, subtitle, icon, 합계, items)로 맞춤.
+      v-for group → 그룹 헤더(ledger-head) + ul.tx-list로 거래 행 반복.
+    -->
     <template v-else>
       <div
         v-for="group in panelGroups"
@@ -72,6 +87,10 @@
         </div>
 
         <ul class="tx-list">
+          <!--
+            거래 한 줄: 클릭·Enter·Space로 상세 모달 오픈(키보드 접근).
+            showCategoryMeta가 true일 때만 카테고리명 보조 표시(월·일 탭).
+          -->
           <li
             v-for="tx in group.items"
             :key="tx.id"
@@ -106,6 +125,11 @@
     </template>
     </div>
 
+    <!--
+      Teleport to="body": 모달을 루트 밖으로 옮겨 z-index·overflow 이슈 방지.
+      배경 클릭(@click.self)만 닫기, 모달 내부는 @click.stop으로 전파 차단.
+      폼 submit → saveDetail(PATCH), 삭제 버튼 → deleteDetail(DELETE) 후 loadData().
+    -->
     <Teleport to="body">
       <div
         v-if="detailOpen"
@@ -148,6 +172,10 @@
 
             <div class="tx-modal-field">
               <label class="tx-modal-label" for="txm-amount">금액</label>
+              <!--
+                :value + 수동 이벤트: v-model만 쓰면 콤마 삽입 시 커서가 끝으로 갈 수 있어,
+                syncDetailAmountFromInputEl로 숫자 개수 기준 커서 위치를 복구함.
+              -->
               <input
                 id="txm-amount"
                 :value="detailForm.amount"
@@ -239,7 +267,16 @@
 <script setup>
 /**
  * List.vue — 내역(카테고리별 / 월별 / 일별)
- * 데이터: json-server(db.json) → Vite 프록시 /api
+ *
+ * 데이터 흐름:
+ *   loadData()가 마운트 시 transactions, categories, users를 병렬 GET.
+ *   activeUserId = users[0].id (로그인 연동 전 임시로 첫 사용자 기준).
+ *   userTransactions = 해당 user_id 거래만 필터.
+ *   activeTab에 따라 categoryGroups | monthGroups | dayGroups 중 하나의 로직으로 그룹핑 후
+ *   panelGroups가 템플릿이 기대하는 공통 필드로 매핑.
+ *
+ * 상세 모달:
+ *   openDetail → editingId + detailForm 채움 → PATCH/DELETE 후 loadData로 동기화.
  */
 import {
   ref,
@@ -293,17 +330,19 @@ const detailForm = reactive({
   memo: '',
 });
 
-/** 금액 표시용: 숫자만 남기고 천 단위 콤마 */
+/** 상세 폼 금액: 내부는 숫자 문자열만 두고, 화면에는 천 단위 콤마 삽입 */
 function formatDetailAmountDigits(digits) {
   if (!digits) return '';
   const normalized = digits.replace(/^0+/, '') || '0';
   return normalized.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 }
 
+/** 커서 왼쪽에 있는 "숫자" 개수 — 포맷 후에도 같은 위치 느낌으로 커서 복원할 때 사용 */
 function countDigitsLeftOfCursor(str, cursorPos) {
   return String(str).slice(0, cursorPos).replace(/\D/g, '').length;
 }
 
+/** 포맷된 문자열에서 digitCount개의 숫자를 지난 뒤의 커서 인덱스 */
 function cursorPosAfterDigitCount(formatted, digitCount) {
   if (digitCount <= 0) return 0;
   let seen = 0;
@@ -356,6 +395,7 @@ function onDetailAmountCompositionEnd(e) {
   syncDetailAmountFromInputEl(e.target);
 }
 
+/** 목록 행 → 모달: 서버 원본 id를 editingId에 두고 폼에 복사(금액은 콤마 포맷 상태로) */
 function openDetail(tx) {
   editingId.value = tx.id;
   detailForm.type = tx.type === 'INCOME' ? 'INCOME' : 'EXPENSE';
@@ -373,6 +413,7 @@ function openDetail(tx) {
   detailOpen.value = true;
 }
 
+/** 모달 닫을 때 편집 id·메시지 초기화 */
 function closeDetail() {
   detailOpen.value = false;
   editingId.value = null;
@@ -380,6 +421,7 @@ function closeDetail() {
   detailSaveOk.value = false;
 }
 
+/** 폼의 콤마 포함 문자열 → 정수(원 단위)로 변환, 실패 시 NaN */
 function parseAmountFromText(text) {
   const cleaned = String(text).replace(/,/g, '').replace(/\s/g, '');
   if (cleaned === '') return NaN;
@@ -387,6 +429,7 @@ function parseAmountFromText(text) {
   return Number.isFinite(n) ? n : NaN;
 }
 
+/** PATCH /transactions/:id 후 성공 시 loadData로 목록·합계 재계산 */
 async function saveDetail() {
   const id = editingId.value;
   if (id == null) return;
@@ -415,6 +458,7 @@ async function saveDetail() {
   }
 }
 
+/** confirm 후 DELETE, 닫고 목록 갱신 */
 async function deleteDetail() {
   const id = editingId.value;
   if (id == null) return;
@@ -432,6 +476,7 @@ async function deleteDetail() {
   }
 }
 
+/** Esc로 모달 닫기(전역 리스너는 onMounted에서 등록) */
 function onDocKeydown(e) {
   if (e.key === 'Escape' && detailOpen.value) {
     e.preventDefault();
@@ -439,10 +484,12 @@ function onDocKeydown(e) {
   }
 }
 
+/** 모달 열림 시 배경 스크롤 잠금 */
 watch(detailOpen, (open) => {
   document.body.style.overflow = open ? 'hidden' : '';
 });
 
+/** 페이지 이탈 시 리스너·body 스타일 정리 */
 onUnmounted(() => {
   document.removeEventListener('keydown', onDocKeydown);
   document.body.style.overflow = '';
@@ -472,18 +519,19 @@ function uiForCategory(cat, id) {
 }
 
 // ---------- 포맷·정렬 유틸 ----------
+/** 합계·금액 표시: 음수 방지 후 ko-KR 천 단위 구분 */
 function formatWon(n) {
   return Math.abs(Number(n) || 0).toLocaleString('ko-KR');
 }
 
-/** 수입은 +, 지출은 - 접두 */
+/** 목록 우측 금액: 타입에 따라 + / - 와 "원" 접미 */
 function formatTxAmount(amount, type) {
   const abs = formatWon(amount);
   if (type === 'INCOME') return `+ ${abs}원`;
   return `- ${abs}원`;
 }
 
-/** 행 왼쪽: MM/DD + 요일 (DB는 날짜만 있음) */
+/** 행 왼쪽: MM/DD + 요일 — ISO 날짜만 올 때 TZ 시프트 줄이려고 정오( T12:00:00 ) 파싱 */
 function formatDateParts(isoDate) {
   if (!isoDate) return { mmdd: '—', sub: '' };
   const d = new Date(`${isoDate}T12:00:00`);
@@ -494,6 +542,7 @@ function formatDateParts(isoDate) {
   return { mmdd: `${mm}/${dd}`, sub: `${w}요일` };
 }
 
+/** 그룹 안 거래: 날짜 내림차순, 같은 날이면 id 내림차순 */
 function sortTxItems(items) {
   return [...items].sort((a, b) => {
     const db = new Date(b.transaction_date).getTime();
@@ -511,6 +560,10 @@ const userTransactions = computed(() => {
   return transactions.value.filter((t) => t.user_id === uid);
 });
 
+/**
+ * 카테고리 탭: category_id마다 한 그룹.
+ * 각 그룹에 items·incomeTotal·expenseTotal 누적 후, 그룹별 정렬·그룹 간 총액 큰 순 정렬.
+ */
 const categoryGroups = computed(() => {
   const byCat = new Map();
 
@@ -548,7 +601,10 @@ const categoryGroups = computed(() => {
   );
 });
 
-/** 월별: YYYY-MM 기준, 최신 월이 위로 */
+/**
+ * 월별 탭: transaction_date의 연·월로 키를 만들고 그룹 헤더는 "N년 M월" 형식.
+ * monthKey 문자열 역순 정렬로 최신 월이 위에 오도록 함.
+ */
 const monthGroups = computed(() => {
   const byMonth = new Map();
 
@@ -586,6 +642,10 @@ const monthGroups = computed(() => {
   return list;
 });
 
+/**
+ * 일별 탭: YYYY-MM-DD 키, 제목은 toLocaleDateString으로 한국어 긴 형식.
+ * dayKey 역순으로 최근 날짜가 위.
+ */
 const dayGroups = computed(() => {
   const byDay = new Map();
 
@@ -630,7 +690,10 @@ const dayGroups = computed(() => {
   return list;
 });
 
-/** 현재 탭에 맞는 그룹을 동일한 형태로 매핑 → 템플릿은 한 벌만 사용 */
+/**
+ * 템플릿 단일화: 탭마다 다른 computed 결과를 동일한 필드(key, title, subtitle, icon, incomeTotal, expenseTotal, items)로 변환.
+ * :key="group.key"로 그룹 단위 DOM 재사용 시 충돌 방지( c- / m- / d- 접두 ).
+ */
 const panelGroups = computed(() => {
   if (activeTab.value === 'category') {
     return categoryGroups.value.map((g) => ({
@@ -665,6 +728,10 @@ const panelGroups = computed(() => {
   }));
 });
 
+/**
+ * 초기 로드 및 저장·삭제 후 갱신용.
+ * 세 엔드포인트를 Promise.all로 동시에 가져와 ref에 넣고, 첫 번째 user의 id를 활성 사용자로 설정.
+ */
 async function loadData() {
   loading.value = true;
   error.value = null;
@@ -687,6 +754,7 @@ async function loadData() {
   }
 }
 
+/** Esc 처리 등록 + 첫 데이터 로드 */
 onMounted(() => {
   document.addEventListener('keydown', onDocKeydown);
   loadData();
@@ -694,6 +762,14 @@ onMounted(() => {
 </script>
 
 <style scoped>
+/*
+  레이아웃 요약:
+  .list-screen — 페이지 바깥 여백·폰트
+  .list-panel — 다크 카드, CSS 변수로 KB 톤(옐로/그레이)
+  .ledger-* / .tx-* — 그룹 헤더·거래 행
+  .tx-modal-* — Teleport 모달(고정 레이어)
+  하단 @media — 탭 세로 스택·거래 행 그리드 재배치
+*/
 /* 바깥 여백 */
 .list-screen {
   box-sizing: border-box;
