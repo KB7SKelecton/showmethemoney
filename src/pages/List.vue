@@ -63,10 +63,10 @@
           </div>
           <div class="ledger-totals">
             <span v-if="group.incomeTotal > 0" class="sum sum--income">
-              + {{ formatWon(group.incomeTotal) }}₩
+              + {{ formatWon(group.incomeTotal) }}원
             </span>
             <span v-if="group.expenseTotal > 0" class="sum sum--expense">
-              - {{ formatWon(group.expenseTotal) }}₩
+              - {{ formatWon(group.expenseTotal) }}원
             </span>
           </div>
         </div>
@@ -479,8 +479,8 @@ function formatWon(n) {
 /** 수입은 +, 지출은 - 접두 */
 function formatTxAmount(amount, type) {
   const abs = formatWon(amount);
-  if (type === 'INCOME') return `+ ${abs}₩`;
-  return `- ${abs}₩`;
+  if (type === 'INCOME') return `+ ${abs}원`;
+  return `- ${abs}원`;
 }
 
 /** 행 왼쪽: MM/DD + 요일 (DB는 날짜만 있음) */
@@ -731,14 +731,13 @@ onMounted(() => {
   margin-bottom: 20px;
   padding-bottom: 12px;
   border-bottom: 1px solid var(--line);
-  background: linear-gradient(180deg, rgba(255, 188, 0, 0.08) 0%, transparent 100%);
 }
 
 .page-title {
-  margin: -20px 0 12px;
-  color: #ffffff;
+  margin: -20px 0 20px;
+  color: #e5e2e1;
   font-size: 1.5rem;
-  font-weight: 600;
+  font-weight: 900;
 }
 
 /* 탭 버튼 행 */
