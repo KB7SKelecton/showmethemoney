@@ -1,135 +1,157 @@
 <template>
-  <!--
-    내역 화면 전체 흐름:
-    1) activeTab으로 보기 방식 전환 → panelGroups(계산 속성)가 바뀌며 같은 템플릿으로 그룹+거래 목록 렌더
-    2) 로딩/에러/사용자 없음/빈 목록은 상단 분기로 메시지 표시
-    3) 거래 행 클릭 → openDetail → Teleport 모달에서 수정·삭제 후 loadData로 목록 갱신
-  -->
+  <!-- 
+    List 컴포넌트 루트
+    - list-screen: 전체 페이지 래퍼
+    - list-panel: 내역 목록 영역
+    - Teleport: 모달을 body에 마운트 (z-index 스택 문제 방지)
+   -->
   <div class="list-screen">
-    <!-- 안쪽 카드: 모서리·내부 패딩 (스타일 변수·다크 패널) -->
     <div class="list-panel">
-    <!--
-      탭: role="tablist"로 접근성 부여.
-      클릭 시 activeTab만 바꿈 → Vue가 categoryGroups / monthGroups / dayGroups 중 해당 computed를 panelGroups에 연결.
-    -->
-    <header class="page-head">
-      <h1 class="page-title">내역</h1>
-      <nav class="list-tabs" role="tablist" aria-label="내역 보기 방식">
-        <button
-          type="button"
-          role="tab"
-          class="list-tab"
-          :class="{ 'list-tab--active': activeTab === 'category' }"
-          :aria-selected="activeTab === 'category'"
-          @click="activeTab = 'category'"
-        >
-          카테고리별 내역
-        </button>
-        <button
-          type="button"
-          role="tab"
-          class="list-tab"
-          :class="{ 'list-tab--active': activeTab === 'month' }"
-          :aria-selected="activeTab === 'month'"
-          @click="activeTab = 'month'"
-        >
-          월별 내역
-        </button>
-        <button
-          type="button"
-          role="tab"
-          class="list-tab"
-          :class="{ 'list-tab--active': activeTab === 'day' }"
-          :aria-selected="activeTab === 'day'"
-          @click="activeTab = 'day'"
-        >
-          일별 내역
-        </button>
-      </nav>
-    </header>
-
-    <!--
-      상태 분기(위에서 아래 순서로 하나만 표시):
-      loading → API 요청 중 / error → 네트워크·서버 오류 / activeUserId 없음 → users 비어 있음 / panelGroups 비어 있음 → 거래 없음
-    -->
-    <div v-if="loading" class="state-msg">불러오는 중…</div>
-    <div v-else-if="error" class="state-msg state-err">{{ error }}</div>
-    <p v-else-if="activeUserId == null" class="state-msg state-err">
-      users 데이터가 없어 내역을 표시할 수 없습니다.
-    </p>
-    <p v-else-if="!panelGroups.length" class="state-msg">표시할 내역이 없습니다.</p>
-
-    <!--
-      정상 데이터: panelGroups는 탭마다 다른 그룹핑 결과를 동일한 shape(title, subtitle, icon, 합계, items)로 맞춤.
-      v-for group → 그룹 헤더(ledger-head) + ul.tx-list로 거래 행 반복.
-    -->
-    <template v-else>
-      <div
-        v-for="group in panelGroups"
-        :key="group.key"
-        class="ledger-block"
-      >
-        <!-- 그룹 요약: 아이콘, 제목/부제, 해당 그룹 수입·지출 합계 -->
-        <div class="ledger-head">
-          <div class="ledger-icon" aria-hidden="true">{{ group.icon }}</div>
-          <div class="ledger-labels">
-            <span class="ledger-title">{{ group.title }}</span>
-            <span class="ledger-sub">{{ group.subtitle }}</span>
-          </div>
-          <div class="ledger-totals">
-            <span v-if="group.incomeTotal > 0" class="sum sum--income">
-              + {{ formatWon(group.incomeTotal) }}원
-            </span>
-            <span v-if="group.expenseTotal > 0" class="sum sum--expense">
-              - {{ formatWon(group.expenseTotal) }}원
-            </span>
-          </div>
-        </div>
-
-        <ul class="tx-list">
-          <!--
-            거래 한 줄: 클릭·Enter·Space로 상세 모달 오픈(키보드 접근).
-            showCategoryMeta가 true일 때만 카테고리명 보조 표시(월·일 탭).
-          -->
-          <li
-            v-for="tx in group.items"
-            :key="tx.id"
-            class="tx-row"
-            :class="tx.type === 'INCOME' ? 'tx-row--income' : 'tx-row--expense'"
-            role="button"
-            tabindex="0"
-            @click="openDetail(tx)"
-            @keydown.enter.prevent="openDetail(tx)"
-            @keydown.space.prevent="openDetail(tx)"
+      <header class="page-head">
+        <h1 class="page-title">내역</h1>
+        <nav class="list-tabs" role="tablist" aria-label="내역 보기 방식"> <!-- role="tablist": 탭 그룹임을 스크린리더에 알림 -->
+          <button
+            type="button"
+            role="tab" 
+            class="list-tab"
+            :class="{ 'list-tab--active': activeTab === 'category' }" 
+            :aria-selected="activeTab === 'category'"
+            @click="activeTab = 'category'"
           >
-            <div class="tx-date">
-              <span>{{ formatDateParts(tx.transaction_date).mmdd }}</span>
-              <span class="tx-subdate">{{ formatDateParts(tx.transaction_date).sub }}</span>
-            </div>
-            <div class="tx-body">
-              <span class="tx-badge">{{ tx.type === 'INCOME' ? '수입' : '지출' }}</span>
-              <span class="tx-title">{{ tx.memo || '내역' }}</span>
-              <span v-if="showCategoryMeta" class="tx-meta">{{ categoryName(tx.category_id) }}</span>
-            </div>
-            <div
-              class="tx-amount"
-              :class="
-                tx.type === 'INCOME' ? 'tx-amount--income' : 'tx-amount--expense'
-              "
-            >
-              {{ formatTxAmount(tx.amount, tx.type) }}
-            </div>
-          </li>
-        </ul>
-      </div>
-    </template>
-    </div>
+            카테고리별 내역
+          </button>
+          <button
+            type="button"
+            role="tab"
+            class="list-tab"
+            :class="{ 'list-tab--active': activeTab === 'month' }"
+            :aria-selected="activeTab === 'month'"
+            @click="activeTab = 'month'"
+          >
+            월별 내역
+          </button>
+          <button
+            type="button"
+            role="tab"
+            class="list-tab"
+            :class="{ 'list-tab--active': activeTab === 'day' }"
+            :aria-selected="activeTab === 'day'"
+            @click="activeTab = 'day'"
+          >
+            일별 내역
+          </button>
+        </nav>
+      </header>
+ 
+      <!-- 
+        상태별 조건부 렌더링 (v-if / v-else-if 체인)
+        1. loading: 데이터 로드 중
+        2. error: API 호출 실패
+        3. activeUserId == null: users 테이블이 비어있는 경우
+        4. !panelGroups.length: 필터 결과가 없는 경우
+        5. else: 정상 데이터 출력
+       -->
+      <div v-if="loading" class="state-msg">불러오는 중…</div> <!-- 1순위: API 호출 중일 때 -->
+      <div v-else-if="error" class="state-msg state-err">{{ error }}</div>  <!-- 2순위: API 호출 실패 시 에러 메시지 -->
+      <p v-else-if="activeUserId == null" class="state-msg state-err"> <!-- 3순위: users 테이블이 비어있는 경우 -->
 
-    <!--
-      Teleport to="body": 모달을 루트 밖으로 옮겨 z-index·overflow 이슈 방지.
-      배경 클릭(@click.self)만 닫기, 모달 내부는 @click.stop으로 전파 차단.
-      폼 submit → saveDetail(PATCH), 삭제 버튼 → deleteDetail(DELETE) 후 loadData().
-    -->
+        users 데이터가 없어 내역을 표시할 수 없습니다.
+      </p>
+      <p v-else-if="!panelGroups.length" class="state-msg">표시할 내역이 없습니다.</p> <!-- 4순위: 거래 데이터가 없는 경우 -->
+ 
+      <!-- 
+        정상 데이터 렌더링
+        - <template v-else> : 실제 DOM 요소를 추가하지 않는 논리 래퍼
+        - panelGroups: activeTab에 따라 category / month / day 그룹 반환하는 computed
+        - :key="group.key" : Vue diffing 알고리즘 최적화를 위한 고유 키
+       -->
+        <!-- panelGroups: activeTab에 따라 카테고리/월/일 그룹 중 하나 반환 -->
+      <template v-else>
+        <div
+          v-for="group in panelGroups"
+          :key="group.key" 
+          class="ledger-block"
+        >
+          <!-- 그룹 요약 헤더
+               - ledger-icon: 카테고리/월/일 대표 이모지
+               - ledger-title: 그룹명 (카테고리명 | 연월 | 날짜)
+               - ledger-sub: 영문 부제 또는 형식 문자열
+               - sum--income / sum--expense: 해당 그룹 합계 표시
+                 (v-if로 0원 항목은 렌더링 생략)
+          -->
+          <div class="ledger-head">
+            <div class="ledger-icon" aria-hidden="true">{{ group.icon }}</div>
+            <div class="ledger-labels">
+              <span class="ledger-title">{{ group.title }}</span>
+              <span class="ledger-sub">{{ group.subtitle }}</span>
+            </div>
+            <div class="ledger-totals">
+              <span v-if="group.incomeTotal > 0" class="sum sum--income">
+                + {{ formatWon(group.incomeTotal) }}원
+              </span>
+              <span v-if="group.expenseTotal > 0" class="sum sum--expense">
+                - {{ formatWon(group.expenseTotal) }}원
+              </span>
+            </div>
+          </div>
+ 
+          <!-- 거래 목록 (ul > li)
+               - role="button" + tabindex="0": 클릭 가능한 li를 키보드 접근 가능하게 처리
+               - @keydown.enter.prevent / @keydown.space.prevent: 키보드 활성화 지원
+               - openDetail(tx): 클릭 시 상세/수정 모달 오픈
+               - tx-row--income / tx-row--expense: 수입·지출 스타일 분기
+          -->
+          <ul class="tx-list">
+            <li
+              v-for="tx in group.items"
+              :key="tx.id"
+              class="tx-row"
+              :class="tx.type === 'INCOME' ? 'tx-row--income' : 'tx-row--expense'"
+              role="button"
+              tabindex="0"
+              @click="openDetail(tx)"
+              @keydown.enter.prevent="openDetail(tx)"
+              @keydown.space.prevent="openDetail(tx)"
+            >
+              <!-- 거래일 표시 (MM/DD + 요일) -->
+              <div class="tx-date">
+                <span>{{ formatDateParts(tx.transaction_date).mmdd }}</span>
+                <span class="tx-subdate">{{ formatDateParts(tx.transaction_date).sub }}</span>
+              </div>
+ 
+              <!-- 거래 내용: 배지(수입/지출) + 메모 + 카테고리명
+                   - showCategoryMeta: 카테고리별 탭이 아닐 때만 카테고리명 표시
+              -->
+              <div class="tx-body">
+                <span class="tx-badge">{{ tx.type === 'INCOME' ? '수입' : '지출' }}</span>
+                <span class="tx-title">{{ tx.memo || '내역' }}</span>
+                <span v-if="showCategoryMeta" class="tx-meta">{{ categoryName(tx.category_id) }}</span>
+              </div>
+ 
+              <!-- 금액 표시: +/- 기호와 함께 포맷팅 -->
+              <div
+                class="tx-amount"
+                :class="
+                  tx.type === 'INCOME' ? 'tx-amount--income' : 'tx-amount--expense'
+                "
+              >
+                {{ formatTxAmount(tx.amount, tx.type) }}
+              </div>
+            </li>
+          </ul>
+        </div>
+      </template>
+    </div>
+ 
+    <!-- 
+      상세/수정 모달
+      - <Teleport to="body">: 모달을 DOM 트리 최상단(body)에 렌더링
+        → 부모 컴포넌트의 overflow:hidden, z-index 등에 영향받지 않음
+      - @click.self="closeDetail": 백드롭 클릭 시 닫기
+        (.self 수정자: 이벤트 발생 요소가 자기 자신일 때만 실행)
+      - @click.stop: 모달 내부 클릭이 백드롭으로 버블링되는 것 차단
+      - role="dialog" + aria-modal + aria-labelledby: 접근성 속성
+     -->
     <Teleport to="body">
       <div
         v-if="detailOpen"
@@ -144,6 +166,7 @@
           aria-labelledby="tx-modal-title"
           @click.stop
         >
+          <!-- 모달 헤더: 제목 + 닫기 버튼 -->
           <div class="tx-modal-head">
             <h2 id="tx-modal-title" class="tx-modal-title">내역 상세</h2>
             <button
@@ -157,6 +180,7 @@
           </div>
 
           <form class="tx-modal-form" @submit.prevent="saveDetail">
+            <!-- 구분 선택 (수입/지출) -->
             <div class="tx-modal-field">
               <label class="tx-modal-label" for="txm-type">구분</label>
               <select
@@ -169,13 +193,15 @@
                 <option value="EXPENSE">지출</option>
               </select>
             </div>
-
+ 
+            <!-- 금액 입력
+                 - :value (단방향 바인딩) + @input (수동 처리): 커서 위치 보존을 위해
+                   v-model 대신 수동 이벤트 처리 방식 사용
+                 - inputmode="numeric": 모바일에서 숫자 키패드 표시
+                 - lang="en": 일부 브라우저에서 쉼표 렌더링 오류 방지
+            -->
             <div class="tx-modal-field">
               <label class="tx-modal-label" for="txm-amount">금액</label>
-              <!--
-                :value + 수동 이벤트: v-model만 쓰면 콤마 삽입 시 커서가 끝으로 갈 수 있어,
-                syncDetailAmountFromInputEl로 숫자 개수 기준 커서 위치를 복구함.
-              -->
               <input
                 id="txm-amount"
                 :value="detailForm.amount"
@@ -190,7 +216,8 @@
                 @compositionend="onDetailAmountCompositionEnd"
               />
             </div>
-
+ 
+            <!-- 거래일 선택 -->
             <div class="tx-modal-field">
               <label class="tx-modal-label" for="txm-date">거래일</label>
               <input
@@ -201,7 +228,11 @@
                 required
               />
             </div>
-
+ 
+            <!-- 카테고리 선택
+                 - categories ref: API에서 불러온 카테고리 목록
+                 - v-model.number: 선택값을 숫자(id)로 변환
+            -->
             <div class="tx-modal-field">
               <label class="tx-modal-label" for="txm-cat">카테고리</label>
               <select
@@ -215,7 +246,8 @@
                 </option>
               </select>
             </div>
-
+ 
+            <!-- 메모 입력 -->
             <div class="tx-modal-field">
               <label class="tx-modal-label" for="txm-memo">메모</label>
               <textarea
@@ -226,10 +258,17 @@
                 placeholder="내용"
               />
             </div>
-
+ 
+            <!-- 저장/삭제 결과 메시지 -->
             <p v-if="detailSaveErr" class="tx-modal-err">{{ detailSaveErr }}</p>
             <p v-if="detailSaveOk" class="tx-modal-ok">저장되었습니다.</p>
-
+ 
+            <!-- 액션 버튼 영역
+                 - :disabled: 저장 중이거나 삭제 중일 때 모든 버튼 비활성화 (중복 요청 방지)
+                 - tx-modal-btn--danger: 삭제 버튼 (빨간색)
+                 - tx-modal-btn--ghost: 닫기 버튼 (테두리만)
+                 - tx-modal-btn--primary: 저장 버튼 (주 색상)
+            -->
             <div class="tx-modal-actions">
               <button
                 type="button"
@@ -263,21 +302,21 @@
     </Teleport>
   </div>
 </template>
-
+ 
 <script setup>
 /**
- * List.vue — 내역(카테고리별 / 월별 / 일별)
+ * 주요 기능:
+ *  1. 탭별 그룹핑: 카테고리별 / 월별 / 일별
+ *  2. 거래 상세 모달: 조회·수정·삭제
+ *  3. 금액 입력 포맷팅: 천 단위 쉼표 + 커서 위치 보존
+ *  4. 웹 접근성: ARIA 속성, 키보드 탐색 지원
  *
  * 데이터 흐름:
- *   loadData()가 마운트 시 transactions, categories, users를 병렬 GET.
- *   activeUserId = users[0].id (로그인 연동 전 임시로 첫 사용자 기준).
- *   userTransactions = 해당 user_id 거래만 필터.
- *   activeTab에 따라 categoryGroups | monthGroups | dayGroups 중 하나의 로직으로 그룹핑 후
- *   panelGroups가 템플릿이 기대하는 공통 필드로 매핑.
- *
- * 상세 모달:
- *   openDetail → editingId + detailForm 채움 → PATCH/DELETE 후 loadData로 동기화.
+ *  API (json-server:3000) → axios → transactions / categories / users ref
+ *  → userTransactions (computed) → categoryGroups / monthGroups / dayGroups (computed)
+ *  → panelGroups (computed, activeTab 기반) → 템플릿 렌더링
  */
+ 
 import {
   ref,
   computed,
@@ -288,61 +327,94 @@ import {
   nextTick,
 } from 'vue';
 import axios from 'axios';
-
-/** API 베이스 (vite.config proxy → localhost:3000) */
+ 
+// ─── 상수 ───────────────
+ 
+/** Vite 개발 서버 프록시 설정을 통해 localhost:3000 으로 포워딩 */
 const API_BASE = '/api';
+ 
 
-/** DB categories에는 name만 있을 때를 대비한 UI 보조(영문 라벨·아이콘) */
 const CATEGORY_UI = {
-  1: { en: 'ADMIN', icon: '📋' },
-  2: { en: 'EDUCATION', icon: '📚' },
-  3: { en: 'TRANSPORT', icon: '🚌' },
-  4: { en: 'SHOPPING', icon: '🛍️' },
-  5: { en: 'TRAVEL', icon: '✈️' },
-  6: { en: 'FOOD & DINING', icon: '🍔' },
-  7: { en: 'CONVENIENCE', icon: '🏪' },
-  8: { en: 'BUSINESS', icon: '💼' },
+  1: { en: 'ADMIN',        icon: '📋' },
+  2: { en: 'EDUCATION',    icon: '📚' },
+  3: { en: 'TRANSPORT',    icon: '🚌' },
+  4: { en: 'SHOPPING',     icon: '🛍️' },
+  5: { en: 'TRAVEL',       icon: '✈️' },
+  6: { en: 'FOOD & DINING',icon: '🍔' },
+  7: { en: 'CONVENIENCE',  icon: '🏪' },
+  8: { en: 'BUSINESS',     icon: '💼' },
 };
-
-// ---------- 화면 상태 ----------
-/** 현재 탭: category | month | day */
+ 
+// ─── 반응형 상태 (ref / reactive) ─────────────────────────────────────────────
+ 
+/** 현재 활성 탭: 'category' | 'month' | 'day' */
 const activeTab = ref('category');
-const loading = ref(true);
-const error = ref(null);
-/** API에서 받은 원본 */
+ 
+/** API 로딩 중 여부 */
+const loading   = ref(true);
+ 
+/** API 에러 메시지 (없으면 null) */
+const error     = ref(null);
+ 
+/** API에서 받아온 전체 거래 내역 배열 */
 const transactions = ref([]);
-const categories = ref([]);
-/** users[0].id 로 거래 필터 (로그인 연동 전 임시) */
+ 
+/** API에서 받아온 카테고리 목록 */
+const categories   = ref([]);
+ 
+/**
+ * 현재 활성 사용자 ID.
+ * users API의 첫 번째 레코드를 기본 사용자로 사용.
+ * null이면 데이터 없음 상태 메시지 표시.
+ */
 const activeUserId = ref(null);
-
-/** 행 클릭 시 상세 모달 */
-const detailOpen = ref(false);
-const editingId = ref(null);
-const detailSaving = ref(false);
+ 
+// ─── 모달 상태 ───────────
+ 
+/** 상세 모달 표시 여부 */
+const detailOpen     = ref(false);
+ 
+/** 현재 편집 중인 거래 ID */
+const editingId      = ref(null);
+ 
+/** 저장 API 호출 중 여부 (버튼 비활성화, 로딩 텍스트용) */
+const detailSaving   = ref(false);
+ 
+/** 삭제 API 호출 중 여부 */
 const detailDeleting = ref(false);
-const detailSaveErr = ref(null);
-const detailSaveOk = ref(false);
+ 
+/** 저장/삭제 에러 메시지 */
+const detailSaveErr  = ref(null);
+ 
+/** 저장 성공 메시지 표시 여부 */
+const detailSaveOk   = ref(false);
+ 
+/**
+ * 모달 폼 데이터 객체.
+ * reactive()를 사용하여 중첩 속성 변경도 감지.
+ * (ref()는 .value 접근 필요, reactive()는 직접 접근 가능)
+ */
 const detailForm = reactive({
-  type: 'EXPENSE',
-  amount: '',
+  type:             'EXPENSE',
+  amount:           '',       // 쉼표 포함 문자열 (예: "1,234,567")
   transaction_date: '',
-  category_id: 1,
-  memo: '',
+  category_id:      1,
+  memo:             '',
 });
-
-/** 상세 폼 금액: 내부는 숫자 문자열만 두고, 화면에는 천 단위 콤마 삽입 */
+ 
+// ─── 금액 입력 유틸리티 ───
+// 숫자만 받기
 function formatDetailAmountDigits(digits) {
   if (!digits) return '';
   const normalized = digits.replace(/^0+/, '') || '0';
   return normalized.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 }
 
-/** 커서 왼쪽에 있는 "숫자" 개수 — 포맷 후에도 같은 위치 느낌으로 커서 복원할 때 사용 */
 function countDigitsLeftOfCursor(str, cursorPos) {
   return String(str).slice(0, cursorPos).replace(/\D/g, '').length;
 }
-
-/** 포맷된 문자열에서 digitCount개의 숫자를 지난 뒤의 커서 인덱스 */
+ 
+// 음수 불가
 function cursorPosAfterDigitCount(formatted, digitCount) {
   if (digitCount <= 0) return 0;
   let seen = 0;
@@ -352,25 +424,24 @@ function cursorPosAfterDigitCount(formatted, digitCount) {
   }
   return formatted.length;
 }
+ 
 
-/** 금액 필드: DOM 값 → 숫자만·콤마 포맷 + 커서(숫자 개수 기준) 유지 */
 function syncDetailAmountFromInputEl(input) {
-  const prev = detailForm.amount;
-  const caret = input.selectionStart ?? prev.length;
+  const prev       = detailForm.amount;
+  const caret      = input.selectionStart ?? prev.length;
   const digitsLeft = countDigitsLeftOfCursor(prev, caret);
-
+ 
   const digitsOnly = String(input.value).replace(/\D/g, '');
-  const next =
-    digitsOnly === '' ? '' : formatDetailAmountDigits(digitsOnly);
+  const next       = digitsOnly === '' ? '' : formatDetailAmountDigits(digitsOnly);
   detailForm.amount = next;
-
+ 
   nextTick(() => {
     const pos = cursorPosAfterDigitCount(next, digitsLeft);
     input.setSelectionRange(pos, pos);
   });
 }
+ 
 
-/** 숫자 외 문자·한글 IME 조합 입력 차단 (붙여넣기는 input에서 정리) */
 function onDetailAmountBeforeInput(e) {
   const t = e.inputType;
   if (
@@ -378,93 +449,119 @@ function onDetailAmountBeforeInput(e) {
     t !== 'insertCompositionText' &&
     t !== 'insertReplacementText'
   ) {
-    return;
+    return; // 삭제/붙여넣기 등은 별도 처리 없이 통과
   }
   const d = e.data;
   if (d == null || d === '') return;
+  // 숫자 외 문자가 포함되어 있으면 이벤트를 취소하여 입력 자체를 막음
   if (/[^\d]/.test(d)) {
     e.preventDefault();
   }
 }
+ 
 
 function onDetailAmountInput(e) {
   syncDetailAmountFromInputEl(e.target);
 }
+ 
 
 function onDetailAmountCompositionEnd(e) {
   syncDetailAmountFromInputEl(e.target);
 }
-
-/** 목록 행 → 모달: 서버 원본 id를 editingId에 두고 폼에 복사(금액은 콤마 포맷 상태로) */
+ 
 function openDetail(tx) {
   editingId.value = tx.id;
   detailForm.type = tx.type === 'INCOME' ? 'INCOME' : 'EXPENSE';
-  const raw =
-    tx.amount != null && tx.amount !== ''
-      ? String(tx.amount).replace(/\D/g, '')
-      : '';
+ 
+  // 금액: DB에는 숫자로 저장되어 있으므로 문자열로 변환 후 쉼표 포맷 적용
+  const raw = tx.amount != null && tx.amount !== ''
+    ? String(tx.amount).replace(/\D/g, '')
+    : '';
   detailForm.amount = raw === '' ? '' : formatDetailAmountDigits(raw);
+ 
   detailForm.transaction_date = tx.transaction_date || '';
-  detailForm.category_id =
-    Number(tx.category_id) || categories.value[0]?.id || 1;
+  // category_id: 숫자 강제변환, 없으면 첫 번째 카테고리 또는 1 사용
+  detailForm.category_id = Number(tx.category_id) || categories.value[0]?.id || 1;
   detailForm.memo = tx.memo ?? '';
+ 
+  // 이전 저장/오류 메시지 초기화
   detailSaveErr.value = null;
-  detailSaveOk.value = false;
-  detailOpen.value = true;
+  detailSaveOk.value  = false;
+  detailOpen.value    = true;
 }
-
-/** 모달 닫을 때 편집 id·메시지 초기화 */
+ 
+/** 상세 모달 닫기 및 편집 상태 초기화 */
 function closeDetail() {
-  detailOpen.value = false;
-  editingId.value = null;
+  detailOpen.value  = false;
+  editingId.value   = null;
   detailSaveErr.value = null;
-  detailSaveOk.value = false;
+  detailSaveOk.value  = false;
 }
-
-/** 폼의 콤마 포함 문자열 → 정수(원 단위)로 변환, 실패 시 NaN */
+ 
+// ─── 저장/삭제 ───────────
+ 
+/**
+ * 쉼표 포함 금액 문자열을 정수로 파싱.
+ * '1,234,567' → 1234567 / '' → NaN
+ * @param {string} text
+ * @returns {number}
+ */
 function parseAmountFromText(text) {
   const cleaned = String(text).replace(/,/g, '').replace(/\s/g, '');
   if (cleaned === '') return NaN;
   const n = Number.parseInt(cleaned, 10);
   return Number.isFinite(n) ? n : NaN;
 }
-
-/** PATCH /transactions/:id 후 성공 시 loadData로 목록·합계 재계산 */
+ 
+/**
+ * 폼 저장: PATCH /api/transactions/:id
+ * - 금액 유효성 검사 후 API 호출
+ * - 성공 시 목록 새로고침
+ * - 저장 중 버튼 비활성화로 중복 제출 방지
+ */
 async function saveDetail() {
   const id = editingId.value;
   if (id == null) return;
+ 
   detailSaveErr.value = null;
-  detailSaveOk.value = false;
+  detailSaveOk.value  = false;
+ 
   const amountNum = parseAmountFromText(detailForm.amount);
   if (!Number.isFinite(amountNum) || amountNum < 0) {
     detailSaveErr.value = '금액을 0 이상의 숫자로 입력해 주세요.';
     return;
   }
+ 
   detailSaving.value = true;
   try {
     await axios.patch(`${API_BASE}/transactions/${id}`, {
-      type: detailForm.type,
-      amount: amountNum,
+      type:             detailForm.type,
+      amount:           amountNum,
       transaction_date: detailForm.transaction_date,
-      category_id: Number(detailForm.category_id),
-      memo: detailForm.memo,
+      category_id:      Number(detailForm.category_id),
+      memo:             detailForm.memo,
     });
     detailSaveOk.value = true;
-    await loadData();
+    await loadData(); // 목록 전체 갱신
   } catch {
     detailSaveErr.value = '저장에 실패했습니다.';
   } finally {
     detailSaving.value = false;
   }
 }
-
-/** confirm 후 DELETE, 닫고 목록 갱신 */
+ 
+/**
+ * 거래 삭제: DELETE /api/transactions/:id
+ * - confirm()으로 사용자 확인 후 진행
+ * - 성공 시 모달 닫고 목록 갱신
+ */
 async function deleteDetail() {
   const id = editingId.value;
   if (id == null) return;
   if (!confirm('이 내역을 삭제할까요?')) return;
+ 
   detailDeleting.value = true;
-  detailSaveErr.value = null;
+  detailSaveErr.value  = null;
   try {
     await axios.delete(`${API_BASE}/transactions/${id}`);
     closeDetail();
@@ -475,266 +572,247 @@ async function deleteDetail() {
     detailDeleting.value = false;
   }
 }
-
-/** Esc로 모달 닫기(전역 리스너는 onMounted에서 등록) */
+ 
+/**
+ * document 레벨 keydown 핸들러: Escape 키로 모달 닫기.
+ * onMounted에서 addEventListener, onUnmounted에서 removeEventListener.
+ */
 function onDocKeydown(e) {
   if (e.key === 'Escape' && detailOpen.value) {
     e.preventDefault();
     closeDetail();
   }
 }
-
-/** 모달 열림 시 배경 스크롤 잠금 */
+ 
+/**
+ * 모달 열림 상태 감시: 모달이 열리면 body 스크롤 잠금, 닫히면 해제.
+ * watch(source, callback): source가 변경될 때 callback 실행.
+ */
 watch(detailOpen, (open) => {
   document.body.style.overflow = open ? 'hidden' : '';
 });
-
-/** 페이지 이탈 시 리스너·body 스타일 정리 */
+ 
+/** 컴포넌트 언마운트 시 이벤트 리스너 제거 및 스크롤 잠금 해제 */
 onUnmounted(() => {
   document.removeEventListener('keydown', onDocKeydown);
   document.body.style.overflow = '';
 });
+ 
 
-// ---------- 탭·표시 보조 ----------
-/** 월·일 탭에서만 행에 카테고리명 표시 (카테고리 탭은 그룹이 곧 카테고리) */
 const showCategoryMeta = computed(() => activeTab.value !== 'category');
+ 
 
-/** category_id → 카테고리 객체 빠른 조회 */
 const catById = computed(
   () => new Map(categories.value.map((c) => [c.id, c])),
 );
+ 
 
 function categoryName(cid) {
   return catById.value.get(cid)?.name ?? '—';
 }
 
-/** 카테고리별 탭 그룹 헤더용 부제·아이콘 */
 function uiForCategory(cat, id) {
-  const u = CATEGORY_UI[id];
+  const u    = CATEGORY_UI[id];
   const base = u?.en ?? cat?.name ?? 'CATEGORY';
   return {
     subtitle: String(base).toUpperCase(),
-    icon: u?.icon ?? '📌',
+    icon:     u?.icon ?? '📌',
   };
 }
+ 
 
-// ---------- 포맷·정렬 유틸 ----------
-/** 합계·금액 표시: 음수 방지 후 ko-KR 천 단위 구분 */
 function formatWon(n) {
   return Math.abs(Number(n) || 0).toLocaleString('ko-KR');
 }
+ 
 
-/** 목록 우측 금액: 타입에 따라 + / - 와 "원" 접미 */
 function formatTxAmount(amount, type) {
   const abs = formatWon(amount);
   if (type === 'INCOME') return `+ ${abs}원`;
   return `- ${abs}원`;
 }
 
-/** 행 왼쪽: MM/DD + 요일 — ISO 날짜만 올 때 TZ 시프트 줄이려고 정오( T12:00:00 ) 파싱 */
 function formatDateParts(isoDate) {
   if (!isoDate) return { mmdd: '—', sub: '' };
   const d = new Date(`${isoDate}T12:00:00`);
   if (Number.isNaN(d.getTime())) return { mmdd: '—', sub: '' };
   const mm = String(d.getMonth() + 1).padStart(2, '0');
   const dd = String(d.getDate()).padStart(2, '0');
-  const w = ['일', '월', '화', '수', '목', '금', '토'][d.getDay()];
+  const w  = ['일', '월', '화', '수', '목', '금', '토'][d.getDay()];
   return { mmdd: `${mm}/${dd}`, sub: `${w}요일` };
 }
+ 
 
-/** 그룹 안 거래: 날짜 내림차순, 같은 날이면 id 내림차순 */
 function sortTxItems(items) {
   return [...items].sort((a, b) => {
     const db = new Date(b.transaction_date).getTime();
     const da = new Date(a.transaction_date).getTime();
     if (db !== da) return db - da;
-    return (b.id ?? 0) - (a.id ?? 0);
+    return (b.id ?? 0) - (a.id ?? 0); // 같은 날짜면 최신 ID 우선
   });
 }
 
-// ---------- 그룹핑(탭별) ----------
-/** 로그인 사용자에 해당하는 거래만 */
 const userTransactions = computed(() => {
   const uid = activeUserId.value;
   if (uid == null) return [];
   return transactions.value.filter((t) => t.user_id === uid);
 });
+ 
 
-/**
- * 카테고리 탭: category_id마다 한 그룹.
- * 각 그룹에 items·incomeTotal·expenseTotal 누적 후, 그룹별 정렬·그룹 간 총액 큰 순 정렬.
- */
 const categoryGroups = computed(() => {
   const byCat = new Map();
-
+ 
   for (const t of userTransactions.value) {
     const cid = t.category_id;
     if (!byCat.has(cid)) {
       const cat = catById.value.get(cid);
-      const ui = uiForCategory(cat, cid);
+      const ui  = uiForCategory(cat, cid);
       byCat.set(cid, {
-        categoryId: cid,
-        nameKo: cat?.name ?? '알 수 없는 카테고리',
-        subtitle: ui.subtitle,
-        icon: ui.icon,
-        items: [],
-        incomeTotal: 0,
+        categoryId:   cid,
+        nameKo:       cat?.name ?? '알 수 없는 카테고리',
+        subtitle:     ui.subtitle,
+        icon:         ui.icon,
+        items:        [],
+        incomeTotal:  0,
         expenseTotal: 0,
       });
     }
-    const g = byCat.get(cid);
-    g.items.push(t);
+    const g   = byCat.get(cid);
     const amt = Number(t.amount) || 0;
-    if (t.type === 'INCOME') g.incomeTotal += amt;
+    g.items.push(t);
+    if      (t.type === 'INCOME')  g.incomeTotal  += amt;
     else if (t.type === 'EXPENSE') g.expenseTotal += amt;
   }
-
-  for (const g of byCat.values()) {
-    g.items = sortTxItems(g.items);
-  }
-
+ 
+  // 각 그룹 내 items 정렬
+  for (const g of byCat.values()) g.items = sortTxItems(g.items);
+ 
+  // 거래 합계 큰 카테고리 우선 정렬
   return [...byCat.values()].sort(
-    (a, b) =>
-      b.incomeTotal +
-      b.expenseTotal -
-      (a.incomeTotal + a.expenseTotal),
+    (a, b) => (b.incomeTotal + b.expenseTotal) - (a.incomeTotal + a.expenseTotal),
   );
 });
+ 
 
-/**
- * 월별 탭: transaction_date의 연·월로 키를 만들고 그룹 헤더는 "N년 M월" 형식.
- * monthKey 문자열 역순 정렬로 최신 월이 위에 오도록 함.
- */
 const monthGroups = computed(() => {
   const byMonth = new Map();
-
+ 
   for (const t of userTransactions.value) {
     const raw = t.transaction_date;
     if (!raw) continue;
     const d = new Date(`${raw}T12:00:00`);
     if (Number.isNaN(d.getTime())) continue;
-    const y = d.getFullYear();
-    const m = d.getMonth() + 1;
+ 
+    const y   = d.getFullYear();
+    const m   = d.getMonth() + 1;
     const key = `${y}-${String(m).padStart(2, '0')}`;
+ 
     if (!byMonth.has(key)) {
       byMonth.set(key, {
-        monthKey: key,
-        title: `${y}년 ${m}월`,
-        subtitle: `MONTHLY · ${y}.${String(m).padStart(2, '0')}`,
-        icon: '📅',
-        items: [],
-        incomeTotal: 0,
+        monthKey:     key,
+        title:        `${y}년 ${m}월`,
+        subtitle:     `MONTHLY · ${y}.${String(m).padStart(2, '0')}`,
+        icon:         '📅',
+        items:        [],
+        incomeTotal:  0,
         expenseTotal: 0,
       });
     }
-    const g = byMonth.get(key);
-    g.items.push(t);
+    const g   = byMonth.get(key);
     const amt = Number(t.amount) || 0;
-    if (t.type === 'INCOME') g.incomeTotal += amt;
+    g.items.push(t);
+    if      (t.type === 'INCOME')  g.incomeTotal  += amt;
     else if (t.type === 'EXPENSE') g.expenseTotal += amt;
   }
-
+ 
   const list = [...byMonth.values()];
-  for (const g of list) {
-    g.items = sortTxItems(g.items);
-  }
-  list.sort((a, b) => b.monthKey.localeCompare(a.monthKey));
+  for (const g of list) g.items = sortTxItems(g.items);
+  list.sort((a, b) => b.monthKey.localeCompare(a.monthKey)); // 최신 월 우선
   return list;
 });
+ 
 
-/**
- * 일별 탭: YYYY-MM-DD 키, 제목은 toLocaleDateString으로 한국어 긴 형식.
- * dayKey 역순으로 최근 날짜가 위.
- */
 const dayGroups = computed(() => {
   const byDay = new Map();
-
+ 
   for (const t of userTransactions.value) {
     const raw = t.transaction_date;
     if (!raw) continue;
     const d = new Date(`${raw}T12:00:00`);
     if (Number.isNaN(d.getTime())) continue;
-    const y = d.getFullYear();
-    const m = d.getMonth() + 1;
+ 
+    const y   = d.getFullYear();
+    const m   = d.getMonth() + 1;
     const day = d.getDate();
     const key = `${y}-${String(m).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+ 
     if (!byDay.has(key)) {
       const title = d.toLocaleDateString('ko-KR', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        weekday: 'long',
+        year: 'numeric', month: 'long', day: 'numeric', weekday: 'long',
       });
       byDay.set(key, {
-        dayKey: key,
+        dayKey:       key,
         title,
-        subtitle: `DAILY · ${key}`,
-        icon: '📆',
-        items: [],
-        incomeTotal: 0,
+        subtitle:     `DAILY · ${key}`,
+        icon:         '📆',
+        items:        [],
+        incomeTotal:  0,
         expenseTotal: 0,
       });
     }
-    const g = byDay.get(key);
-    g.items.push(t);
+    const g   = byDay.get(key);
     const amt = Number(t.amount) || 0;
-    if (t.type === 'INCOME') g.incomeTotal += amt;
+    g.items.push(t);
+    if      (t.type === 'INCOME')  g.incomeTotal  += amt;
     else if (t.type === 'EXPENSE') g.expenseTotal += amt;
   }
-
+ 
   const list = [...byDay.values()];
-  for (const g of list) {
-    g.items = sortTxItems(g.items);
-  }
-  list.sort((a, b) => b.dayKey.localeCompare(a.dayKey));
+  for (const g of list) g.items = sortTxItems(g.items);
+  list.sort((a, b) => b.dayKey.localeCompare(a.dayKey)); // 최신 날짜 우선
   return list;
 });
+ 
 
-/**
- * 템플릿 단일화: 탭마다 다른 computed 결과를 동일한 필드(key, title, subtitle, icon, incomeTotal, expenseTotal, items)로 변환.
- * :key="group.key"로 그룹 단위 DOM 재사용 시 충돌 방지( c- / m- / d- 접두 ).
- */
 const panelGroups = computed(() => {
   if (activeTab.value === 'category') {
     return categoryGroups.value.map((g) => ({
-      key: `c-${g.categoryId}`,
-      title: g.nameKo,
-      subtitle: g.subtitle,
-      icon: g.icon,
-      incomeTotal: g.incomeTotal,
+      key:          `c-${g.categoryId}`,
+      title:        g.nameKo,
+      subtitle:     g.subtitle,
+      icon:         g.icon,
+      incomeTotal:  g.incomeTotal,
       expenseTotal: g.expenseTotal,
-      items: g.items,
+      items:        g.items,
     }));
   }
   if (activeTab.value === 'month') {
     return monthGroups.value.map((g) => ({
-      key: `m-${g.monthKey}`,
-      title: g.title,
-      subtitle: g.subtitle,
-      icon: g.icon,
-      incomeTotal: g.incomeTotal,
+      key:          `m-${g.monthKey}`,
+      title:        g.title,
+      subtitle:     g.subtitle,
+      icon:         g.icon,
+      incomeTotal:  g.incomeTotal,
       expenseTotal: g.expenseTotal,
-      items: g.items,
+      items:        g.items,
     }));
   }
+ 
   return dayGroups.value.map((g) => ({
-    key: `d-${g.dayKey}`,
-    title: g.title,
-    subtitle: g.subtitle,
-    icon: g.icon,
-    incomeTotal: g.incomeTotal,
+    key:          `d-${g.dayKey}`,
+    title:        g.title,
+    subtitle:     g.subtitle,
+    icon:         g.icon,
+    incomeTotal:  g.incomeTotal,
     expenseTotal: g.expenseTotal,
-    items: g.items,
+    items:        g.items,
   }));
 });
+ 
 
-/**
- * 초기 로드 및 저장·삭제 후 갱신용.
- * 세 엔드포인트를 Promise.all로 동시에 가져와 ref에 넣고, 첫 번째 user의 id를 활성 사용자로 설정.
- */
 async function loadData() {
-  loading.value = true;
-  error.value = null;
+  loading.value      = true;
+  error.value        = null;
   activeUserId.value = null;
   try {
     const [txRes, catRes, userRes] = await Promise.all([
@@ -742,19 +820,19 @@ async function loadData() {
       axios.get(`${API_BASE}/categories`),
       axios.get(`${API_BASE}/users`),
     ]);
-    transactions.value = Array.isArray(txRes.data) ? txRes.data : [];
-    categories.value = Array.isArray(catRes.data) ? catRes.data : [];
-    const users = Array.isArray(userRes.data) ? userRes.data : [];
+    transactions.value = Array.isArray(txRes.data)  ? txRes.data  : [];
+    categories.value   = Array.isArray(catRes.data) ? catRes.data : [];
+    const users        = Array.isArray(userRes.data) ? userRes.data : [];
+    // 첫 번째 사용자를 기본 활성 사용자로 설정 (멀티 사용자 지원 미구현)
     activeUserId.value = users.length ? Number(users[0].id) : null;
   } catch {
-    error.value =
-      '데이터를 불러오지 못했습니다. npm run api 로 json-server(3000) 실행 후 다시 시도해 주세요.';
+    error.value = '데이터를 불러오지 못했습니다. npm run api 로 json-server(3000) 실행 후 다시 시도해 주세요.';
   } finally {
     loading.value = false;
   }
 }
+ 
 
-/** Esc 처리 등록 + 첫 데이터 로드 */
 onMounted(() => {
   document.addEventListener('keydown', onDocKeydown);
   loadData();
@@ -762,15 +840,7 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/*
-  레이아웃 요약:
-  .list-screen — 페이지 바깥 여백·폰트
-  .list-panel — 다크 카드, CSS 변수로 KB 톤(옐로/그레이)
-  .ledger-* / .tx-* — 그룹 헤더·거래 행
-  .tx-modal-* — Teleport 모달(고정 레이어)
-  하단 @media — 탭 세로 스택·거래 행 그리드 재배치
-*/
-/* 바깥 여백 */
+
 .list-screen {
   box-sizing: border-box;
   padding: 28px 20px 20px;
