@@ -813,7 +813,7 @@ onMounted(() => {
   margin: -20px 0 20px;
   color: #e5e2e1;
   font-size: 1.5rem;
-  font-weight: 900;
+  font-weight: 600;
 }
 
 /* 탭 버튼 행 */
