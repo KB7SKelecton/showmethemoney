@@ -734,10 +734,10 @@ onMounted(() => {
 }
 
 .page-title {
-  margin: -20px 0 12px;
-  color: #ffffff;
+  margin: -20px 0 20px;
+  color: #e5e2e1;
   font-size: 1.5rem;
-  font-weight: 600;
+  font-weight: 900;
 }
 
 /* 탭 버튼 행 */
